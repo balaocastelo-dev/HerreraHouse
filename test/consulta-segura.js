@@ -127,7 +127,7 @@ try {
   if (e.status !== 1) throw e;
   lista = e.stdout ? String(e.stdout) : '';
 }
-const achados = lista.split('\n').map((s) => s.trim().replace(/^\.\//, '')).filter(Boolean).sort();
+const achados = lista.split('\n').map((s) => s.trim().replace(/\\/g, '/').replace(/^\.\//, '')).filter(Boolean).sort();
 const permitidos = [
   'docs/PLANO-CENTRALIZACAO.md',
   'sql/migrar-schema-ruah-para-base-rollback.sql',
