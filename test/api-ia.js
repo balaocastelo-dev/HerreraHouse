@@ -149,10 +149,12 @@ const assert = require('assert');
     assert.equal((await como(ckC, m, url, body)).s, 403, 'corretor não mexe em chave (' + m + ' ' + url + ')');
   }
 
-  const html = await (await fetch(base + '/app.html')).text();
-  assert.ok(html.includes('/chaves.js'), 'a tela do sistema carrega chaves.js');
+  const html = await (await fetch(base + '/entrar')).text();
   const jsTela = await (await fetch(base + '/chaves.js')).text();
   const jsApp = await (await fetch(base + '/app.js')).text();
+  assert.ok(jsApp.includes('/chaves.js'), 'a tela do sistema carrega chaves.js quando abre Configurações');
+  assert.match(html, /src="\/app\.js" defer/);
+  assert.doesNotMatch(html, /escritorio-jogo\.js/);
   assert.match(jsApp, /secaoChavesApi\(chaves, !!ig\.gestor_plataforma\)/);
   assert.match(jsApp, /adm \? api\('GET', '\/api\/chaves'\)/);
   const vm = require('vm');

@@ -77,20 +77,104 @@ ACT.copiar = (el) => copiar(el.dataset.txt);
 const navega = (h) => { if (location.hash === h) rota(); else location.hash = h; };
 ACT.ir = (el) => navega(el.dataset.href);
 
+// CSS completo e as fontes saem com media=print (não travam a primeira pintura). Quando o arquivo chega, passam a valer.
+function liberaCss(id) {
+  const l = document.getElementById(id);
+  if (!l) return;
+  const liga = () => { l.media = 'all'; };
+  l.addEventListener('load', liga, { once: true });
+  if (l.sheet) liga();
+}
+
+// Cada tela pede só os arquivos dela. O login fica em marca.js + app.js; radar, fisguei, escritório e 3D não baixam antes da entrada.
+const MODULOS = {
+  galeria: ['/galeria.js'],
+  chaves: ['/chaves.js'],
+  chat: ['/chat.js'],
+  radar: ['/radar.js'],
+  fisguei: ['/fisguei.js', '/fisguei-explorar.js'],
+  condominios: ['/condominios.js'],
+  mercado: ['/mercado.js'],
+  bairros: ['/bairros.js'],
+  painel: ['/painel.js'],
+  captacao: ['/captacao.js'],
+  escritorio: ['/escritorio.js'],
+  jogo: ['/escritorio-jogo.js'],
+  social: ['/social.js'],
+  estacao: ['/estacao-pc.js'],
+  lgpd: ['/lgpd.js'],
+  movimento: ['/movimento.js'],
+};
+const _js = new Map();
+function carregaJs(src) {
+  if (!_js.has(src)) {
+    _js.set(src, new Promise((ok, falha) => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.async = false;
+      s.onload = () => ok();
+      s.onerror = () => { _js.delete(src); falha(new Error('Não foi possível carregar ' + src)); };
+      document.head.appendChild(s);
+    }));
+  }
+  return _js.get(src);
+}
+async function carrega(...nomes) {
+  const lista = [];
+  for (const n of nomes) for (const src of MODULOS[n] || []) if (!lista.includes(src)) lista.push(src);
+  for (const src of lista) await carregaJs(src);
+}
+function modulosDaRota(p) {
+  const a = p[0];
+  if (a === 'imoveis') return ['galeria', 'mercado'];
+  if (a === 'chat') return ['chat'];
+  if (a === 'avisos') return ['escritorio'];
+  if (a === 'whats' && p[1] === 'ao-vivo') return ['escritorio', 'jogo', 'estacao'];
+  if (a === 'whats') return ['escritorio', 'estacao'];
+  if (a === 'radar' && p[1] === 'novo') return [];
+  if (a === 'radar' && p[1] && p[1] !== 'aprovacoes') return ['radar', 'captacao', 'galeria', 'fisguei', 'mercado'];
+  if (a === 'radar') return ['radar', 'captacao'];
+  if (a === 'fisguei') return ['captacao', 'fisguei', 'galeria', 'mercado'];
+  if (a === 'mercado' || a === 'captacao') return [];
+  if (['apartamentos', 'casas', 'terrenos', 'comerciais'].includes(a)) return ['mercado', 'captacao'];
+  if (a === 'robos') return ['captacao'];
+  if (a === 'condominios') return ['condominios', 'mercado'];
+  if (a === 'redes') return ['social'];
+  if (a === 'bairros') return ['bairros'];
+  if (a === 'configuracoes') return ['chaves'];
+  if (a === 'privacidade') return ['lgpd'];
+  if (!a || a === 'painel') return veTudo() ? ['painel', 'radar'] : [];
+  return [];
+}
+
 // ---------- primeiro acesso e login ----------
 async function inicio() {
   try { ME = await api('GET', '/api/me'); }
   catch {
     const s = await (await fetch('/api/setup')).json();
-    return s.precisa ? telaSetup() : telaLogin();
+    if (s.precisa) telaSetup(); else telaLogin();
+    carrega('movimento');
+    return;
   }
-  await carregaBase();
-  shell(); rota();
+  await entra();
+}
+async function entra() {
+  await Promise.all([carregaBase(), carrega('movimento', ...(EMBUTIDO ? [] : ['chat', 'lgpd']))]);
+  shell();
+  rota();
+  carrega(...(EMBUTIDO ? ['mercado'] : ['mercado', 'social'])).then(() => {
+    if (typeof mapasCfg === 'function') mapasCfg();
+    if (!EMBUTIDO) atualizaBadge();
+  }).catch(() => {});
 }
 async function carregaBase() {
-  const [t, u] = await Promise.all([api('GET', '/api/imoveis/tipos'), api('GET', '/api/usuarios')]);
-  TIPOS = t.tipos; CART_ETAPAS = t.etapas || []; ORIGENS = t.origens || []; USUARIOS = u.filter((x) => x.ativo !== 0);
-  if (typeof mapasCfg === 'function') mapasCfg(); // sabe se a fachada do Google está ligada (reserva das fotos)
+  if (!carregaBase.p) {
+    carregaBase.p = (async () => {
+      const [t, u] = await Promise.all([api('GET', '/api/imoveis/tipos'), api('GET', '/api/usuarios')]);
+      TIPOS = t.tipos; CART_ETAPAS = t.etapas || []; ORIGENS = t.origens || []; USUARIOS = u.filter((x) => x.ativo !== 0);
+    })().catch((e) => { carregaBase.p = null; throw e; });
+  }
+  return carregaBase.p;
 }
 // ---------- ordenar listas: cada botão alterna menor → maior e maior → menor ----------
 // opcoes: [[chave, rótulo, (item) => valor, texto?]]. Sem o dado vai sempre para o fim.
@@ -134,7 +218,7 @@ FORM.setup = async (f) => {
   const d = formJSON(f);
   if (d.senha !== d.senha2) throw new Error('As senhas não conferem.');
   const r = await api('POST', '/api/setup', d);
-  ME = await api('GET', '/api/me'); await carregaBase(); shell(); navega('#/painel');
+  ME = await api('GET', '/api/me'); await entra(); navega('#/painel');
   if (r.exemplo) modal(`<h2>Dados de exemplo criados</h2><p>Dois corretores de teste foram criados. Anote as senhas: elas não aparecem de novo.</p>
     <div class="tbl"><table><tr><th>Corretor</th><th>Login</th><th>Senha</th></tr>${r.exemplo.corretores.map((c) => `<tr><td>${esc(c.nome)}</td><td class="mono">${esc(c.email)}</td><td class="mono">${esc(c.senha)}</td></tr>`).join('')}</table></div>
     <p class="muted small">Desative esses usuários em Configurações quando terminar os testes.</p><div class="row"><span class="sp"></span><button class="btn pri" data-fecha>Entendi</button></div>`);
@@ -149,7 +233,7 @@ function telaLogin() {
     <button class="btn pri" type="submit">Entrar</button>
     <p class="muted small" style="margin:0">Esqueceu a senha? Peça ao administrativo para redefinir.</p></form></main>`;
 }
-FORM.login = async (f) => { await api('POST', '/api/login', formJSON(f)); ME = await api('GET', '/api/me'); await carregaBase(); shell(); rota(); };
+FORM.login = async (f) => { await api('POST', '/api/login', formJSON(f)); ME = await api('GET', '/api/me'); await entra(); };
 ACT.sair = async () => { await api('POST', '/api/logout').catch(() => {}); ME = null; telaLogin(); };
 
 // ---------- moldura ----------
@@ -229,6 +313,10 @@ async function rota() {
   const main = $('#main'); if (!main) return;
   main.innerHTML = '<p class="muted">Carregando…</p>';
   try {
+    const mods = modulosDaRota(p);
+    if (mods.length) await carrega(...mods);
+    if (mods.includes('mercado') && typeof mapasCfg === 'function') await mapasCfg();
+    if (seq !== rotaSeq) return;
     if (p[0] === 'imoveis' && p[1] === 'novo') await telaImovelForm();
     else if (p[0] === 'imoveis' && p[1] && p[2] === 'editar') await telaImovelForm(+p[1]);
     else if (p[0] === 'imoveis' && p[1]) await telaFicha(+p[1], p[2] || 'dados');
@@ -862,7 +950,9 @@ ACT.ativo = (el) => comBotao(el, async () => { await api('PATCH', `/api/usuarios
 FORM['meu-telefone'] = async (f) => { await api('POST', '/api/me/telefone', formJSON(f)); ME = await api('GET', '/api/me'); toast('WhatsApp salvo'); };
 FORM['minha-senha'] = async (f) => { await api('POST', '/api/me/senha', formJSON(f)); f.reset(); toast('Senha trocada'); };
 
-// só começa depois que todos os scripts da página (radar, fisguei, captação, vitrines…) estiverem carregados
+// O login começa com marca.js e app.js. As outras telas pedem o arquivo delas na rota.
+liberaCss('css-completo');
+liberaCss('css-fontes');
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', inicio); else inicio();
 
 // Áreas que rolam (tabelas largas, linha do tempo, funil, feed) precisam ser alcançáveis pelo teclado.
