@@ -67,6 +67,8 @@ section[id], div[id] { scroll-margin-top: 72px; }
 .palco-tela { position: relative; border-radius: 22px; overflow: hidden; border: 1px solid rgb(255 255 255 / .1); box-shadow: 0 50px 120px -40px rgb(0 0 0 / .9), 0 0 0 1px rgb(95 212 191 / .08); aspect-ratio: 16 / 10; background: #0b1218; }
 .palco-tela video, .palco-tela > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 .palco-tela::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 60%, rgb(7 11 15 / .6)); pointer-events: none; }
+.palco-play { position: absolute; z-index: 3; left: 50%; top: 42%; transform: translate(-50%, -50%); cursor: pointer; border-radius: 999px; padding: 12px 18px; background: rgb(7 11 15 / .78); color: var(--luz); font: 600 14px/1 var(--f-txt); border: 1px solid rgb(255 255 255 / .18); }
+.palco-play::before { content: ''; display: inline-block; width: 0; height: 0; margin-right: 8px; vertical-align: -1px; border-style: solid; border-width: 6px 0 6px 10px; border-color: transparent transparent transparent var(--menta); }
 .palco-legenda { position: absolute; left: 18px; bottom: 15px; right: 18px; z-index: 2; font-size: 13.5px; color: #dfe9e6; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
 .palco-legenda b { font: 700 15px var(--f-tit); }
 .flutua { position: absolute; z-index: 3; background: rgb(13 20 26 / .84); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgb(255 255 255 / .1); border-radius: 14px; padding: 11px 14px; font-size: 13.5px; line-height: 1.35; color: var(--luz); box-shadow: 0 20px 40px -18px rgb(0 0 0 / .8); max-width: 250px; }

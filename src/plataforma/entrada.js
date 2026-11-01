@@ -39,6 +39,7 @@ const anota = (chave) => { const h = hits.get(chave) || []; h.push(Date.now()); 
 
 const NOME = process.env.SISTEMA_NOME || 'Herrera HOUSE IA';
 const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" href="/icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="robots" content="noindex"><title>Entrar · ${NOME}</title>
 <style>
 :root{--fundo:#f6f4ef;--cartao:#fff;--texto:#1f2326;--suave:#6b6a66;--linha:#e3e0d8;--marca:#1f4d3a;--erro:#a8322d}

@@ -3,13 +3,36 @@
   document.documentElement.classList.add('js');
   var calmo = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // vídeo do 3D: sem movimento quando a pessoa pediu menos movimento; pausa fora da tela
+  // vídeo do 3D: o arquivo só entra quando vai tocar. No celular (ou com economia de dados) fica no poster até o clique.
   var video = document.querySelector('.palco video');
+  var botao = document.querySelector('.palco-play');
   if (video) {
-    if (calmo) { video.removeAttribute('autoplay'); video.pause(); }
-    else if ('IntersectionObserver' in window) {
-      new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { var p = video.play(); if (p && p.catch) p.catch(function () {}); } else video.pause(); }); }, { threshold: 0.15 }).observe(video);
+    var mobile = window.matchMedia && window.matchMedia('(max-width: 760px)').matches;
+    var economiza = mobile || (navigator.connection && navigator.connection.saveData);
+    function fontes() {
+      if (video.querySelector('source')) return;
+      [['webm', 'video/webm'], ['mp4', 'video/mp4']].forEach(function (par) {
+        var s = document.createElement('source');
+        s.src = video.getAttribute('data-' + par[0]);
+        s.type = par[1];
+        video.appendChild(s);
+      });
+      video.load();
     }
+    function esconde() { if (botao) botao.hidden = true; }
+    function mostra() { if (botao) botao.hidden = false; }
+    function tocar() {
+      fontes();
+      var p = video.play();
+      if (p && p.then) p.then(esconde).catch(mostra);
+      else esconde();
+    }
+    if (botao) botao.addEventListener('click', tocar);
+    if (calmo) video.pause();
+    else if (economiza) mostra();
+    else if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) tocar(); else video.pause(); }); }, { threshold: 0.15 }).observe(video);
+    } else tocar();
   }
 
   // números contando quando aparecem
