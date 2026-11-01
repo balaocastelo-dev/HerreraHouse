@@ -110,14 +110,15 @@ const ia = http.createServer((req, res) => {
   const msgMonitor = (tel, nome, dir, texto, status = 'enviada') => run('INSERT INTO agente_mensagens(agente,telefone,nome,direcao,texto,status) VALUES(?,?,?,?,?,?)', 'apartamentos', tel, nome, dir, texto, status);
   msgMonitor('5519000000001', 'Antigo', 'entrada', 'Conversa anterior');
   msgMonitor('5519987654321', 'Érica Souza', 'entrada', 'Quero conhecer o apartamento');
-  msgMonitor('5519987654321', 'Érica Souza', 'saida', 'Olá Érica, podemos agendar');
-  msgMonitor('5519987654321', 'Érica Souza', 'entrada', 'Érica Souza, (19) 98765-4321, erica@example.com');
+  msgMonitor('5519987654321', 'Érica Souza', 'saida', 'Olá Erica, reunião na América amanhã?');
+  msgMonitor('5519987654321', 'E\u0301rica Souza', 'entrada', 'E\u0301rica Souza, (19) 98765-4321, erica@example.com');
   msgMonitor('5519987654321', 'Érica Souza', 'saida', 'Perfeito, amanhã às 10h. ' + 'Detalhe '.repeat(15));
   msgMonitor('teste-9-apartamentos', 'Teste', 'entrada', 'Não mostrar teste');
   msgMonitor('5519000000001', 'Antigo', 'saida', 'Não mostrar rascunho', 'aprovar');
   const monitor = (await req('GET', '/api/escritorio/ao-vivo?full=1')).agentes.find((a) => a.slug === 'apartamentos').ultimas;
   ok(monitor.length === 3 && monitor[0].direcao === 'saida' && monitor.every((m) => m.texto.length <= 60 && /^\d\d:\d\d$/.test(m.hora)), 'monitores: conversa recente, ordem, direção, hora e limite de 60 caracteres');
-  ok(!/Érica|Souza|98765|example|telefone|rascunho|anterior|Teste/.test(JSON.stringify(monitor)) && monitor[1].texto.includes('Cliente'), 'monitores: nomes, telefone e e-mail removidos antes de enviar');
+  ok(!/Erica|Érica|Souza|98765|example|telefone|rascunho|anterior|Teste/.test(JSON.stringify(monitor)) && monitor[1].texto.includes('Cliente'), 'monitores: nomes, telefone e e-mail removidos antes de enviar');
+  ok(monitor[0].texto === 'Olá Cliente, reunião na América amanhã?' && monitor[1].texto.startsWith('Cliente Cliente, '), 'monitores: nomes sem acento ou decompostos são ocultados sem alterar palavras e acentos do texto comum');
   const cookieAdm = cookie, auth = require('../src/auth');
   const corretorTeste = one("SELECT id FROM usuarios WHERE perfil='corretor' ORDER BY id LIMIT 1");
   cookie = 'hh_sessao=' + auth.criarSessao(corretorTeste.id);
