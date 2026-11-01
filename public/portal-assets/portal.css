@@ -317,6 +317,12 @@ body.p-luz-aberta{overflow:hidden}
 .p-cd-cat li:first-child{border-top:0}
 .p-cd-cat li span:last-child{color:var(--pedra);white-space:nowrap}
 .p-cd-nota{margin:14px 0 0}
+.p-cd-lista{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.p-cd-lista a{display:flex;justify-content:space-between;gap:16px;align-items:baseline;text-decoration:none;color:var(--grafite);border:1px solid var(--linha);border-radius:var(--raio);padding:12px 14px;background:var(--papel)}
+.p-cd-lista a:hover{border-color:var(--ouro);color:var(--grafite)}
+.p-cd-lista b{font-weight:600}
+.p-cd-lista span{color:var(--pedra);font-size:14px;text-align:right}
+@media (max-width:600px){.p-cd-lista a{flex-direction:column;align-items:flex-start;gap:2px}.p-cd-lista span{text-align:left}}
 
 /* ---- guias de bairro ---- */
 .p-guia{margin:18px 0 0;padding:14px 18px;border-left:3px solid var(--ouro);background:var(--papel);font-size:15.5px}

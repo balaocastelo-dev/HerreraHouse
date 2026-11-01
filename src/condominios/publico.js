@@ -1,4 +1,4 @@
-// Condomínios · página pública de cada condomínio no portal (/condominios/<slug>) e os dados do 3D para o visitante.
+// Condomínios · índice público (/condominios), a página de cada condomínio (/condominios/<slug>) e os dados do 3D para o visitante.
 // Mostra só o que é público e do cliente (a imobiliária): nome, bairro, tamanho do prédio (Censo), lazer, o que tem perto, o 3D
 // e os imóveis do cliente à venda ali. Nada do Radar, do Fisguei, de proprietários ou de concorrentes; sem rua e número.
 // Fica fora do Google (noindex) até a imobiliária decidir divulgar (CONDOMINIOS_PUBLICOS=1 no .env/Vercel).
@@ -15,6 +15,49 @@ const SLUG = /^[a-z0-9][a-z0-9-]{1,90}$/;
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const CSP = "default-src 'self'; img-src 'self' data:; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'";
 const LAZER = require('./base').LAZER;
+
+function listarPublicos() {
+  return all(`SELECT nome, slug, bairro, tipo, andares, torres, unidades, ano_construcao
+    FROM condominios
+    WHERE slug IS NOT NULL AND slug <> '' AND lat IS NOT NULL AND coalesce(tipo,'') <> 'comercial'`)
+    .filter((c) => SLUG.test(c.slug))
+    .sort((a, b) => String(a.bairro || '').localeCompare(String(b.bairro || ''), 'pt-BR')
+      || String(a.nome).localeCompare(String(b.nome), 'pt-BR'));
+}
+
+function fatosPublicos(c) {
+  const vertical = c.tipo !== 'horizontal';
+  return [
+    vertical && c.andares ? `${c.andares} andares` : null,
+    c.torres ? `${c.torres} ${vertical ? 'torres' : 'quadras'}` : null,
+    c.unidades ? `${c.unidades} ${vertical ? 'apartamentos' : 'casas'}` : null,
+    c.ano_construcao ? `construído em ${c.ano_construcao}` : null,
+  ].filter(Boolean);
+}
+
+function paginaLista(req, lista) {
+  const indexar = process.env.CONDOMINIOS_PUBLICOS === '1' && lista.length > 0;
+  const grupos = new Map();
+  for (const c of lista) {
+    const bairro = c.bairro || 'Campinas';
+    if (!grupos.has(bairro)) grupos.set(bairro, []);
+    grupos.get(bairro).push(c);
+  }
+  const corpo = lista.length ? `
+<section class="p-hero p-hero-curto">
+  <h1>Condomínios</h1>
+  <p class="p-sobre depois">Campinas</p>
+  <p class="p-hero-l">Prédios e condomínios de casas com página na ${esc(CLIENTE)}: o que tem perto, a visita em 3D e os imóveis à venda.</p>
+</section>
+${[...grupos].map(([bairro, itens]) => `<section class="p-cd-sec"><h2>${esc(bairro)}</h2>
+<ul class="p-cd-lista">${itens.map((c) => {
+    const tipo = c.tipo === 'horizontal' ? 'Condomínio de casas' : 'Prédio residencial';
+    return `<li><a href="/condominios/${esc(c.slug)}"><b>${esc(c.nome)}</b><span>${esc([tipo, ...fatosPublicos(c)].join(' · '))}</span></a></li>`;
+  }).join('')}</ul></section>`).join('')}`
+    : `<div class="p-vazio p-vazio-g"><h1>Condomínios</h1><p>As páginas dos condomínios chegam em breve.</p><a class="p-botao" href="/imoveis">Ver os imóveis à venda</a></div>`;
+  const descricao = `Condomínios e prédios de Campinas com página na ${CLIENTE}: estrutura, o que tem perto e imóveis à venda.`;
+  return paginas.casca(req, { titulo: 'Condomínios em Campinas', descricao, caminho: '/condominios', corpo, classe: 'p-cd', semIndice: !indexar });
+}
 
 function porSlug(slug) {
   if (!SLUG.test(slug)) return null;
@@ -76,6 +119,14 @@ ${cats.length ? `<section class="p-cd-sec"><h2>O que tem perto</h2><p class="p-c
 }
 
 const router = express.Router();
+function indice(req, res, next) {
+  // Com a rota folgada do Express, /condominios e /condominios/ caem no mesmo lugar: a barra volta para o endereço limpo.
+  const caminho = req.originalUrl.split('?')[0];
+  if (caminho.length > 1 && caminho.endsWith('/')) return res.redirect(301, caminho.replace(/\/+$/, ''));
+  try { html(res, paginaLista(req, listarPublicos())); }
+  catch (e) { next(e); }
+}
+router.get(['/condominios', '/condominios/'], indice);
 router.get('/condominios/:slug', async (req, res, next) => {
   const c = porSlug(req.params.slug);
   if (!c) return next();

@@ -163,7 +163,23 @@ app.get(['/', '/index.html'], (req, res) => {
   if (logado || semUsuarios || APP_HOSTS.has(String(req.hostname || '').toLowerCase())) return telaDoSistema(req, res);
   // o endereço depois do # não chega ao servidor: a página decide (com #/... vai para /entrar, senão para /imoveis)
   res.setHeader('Cache-Control', 'no-cache');
-  res.type('html').send('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" href="/icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><title>Imóveis</title><meta name="robots" content="noindex"><script src="/ir.js"></script><noscript><meta http-equiv="refresh" content="0;url=/imoveis"></noscript></head><body><a href="/imoveis">Ver os imóveis</a></body></html>');
+  res.type('html').send(`<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<title>Imóveis</title>
+<meta name="robots" content="noindex">
+<script src="/ir.js"></script>
+<noscript><meta http-equiv="refresh" content="0;url=/imoveis"></noscript>
+</head>
+<body>
+<p><a href="/imoveis">Ver os imóveis</a></p>
+</body>
+</html>`);
 });
 // Humanos, retratos, texturas do cenário e three.js mudam raramente: cache de 7 dias no navegador.
 for (const p of ['plataforma/pessoas', 'plataforma/agentes', 'plataforma/cenario', 'vendor']) app.use('/' + p, express.static(path.join(PUB, p), { index: false, maxAge: '7d' }));

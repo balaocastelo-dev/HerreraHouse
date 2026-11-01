@@ -1,0 +1,40 @@
+/* Entrada (/entrar): o mínimo para o login pintar sem esperar o style.css inteiro.
+   O restante do visual chega em /style.css, sem travar a primeira pintura. */
+:root{
+  --bg:#f6f5f2; --panel:#ffffff; --ink:#22252a; --muted:#6b6f76; --line:#e4e1da;
+  --gold:#a8823c; --gold-ink:#80612a; --slate:#2c3036; --slate-ink:#f1eee8;
+  --f-display:"Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --f-body:"DM Sans", "Segoe UI", system-ui, sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#17191c; --panel:#202328; --ink:#ece9e3; --muted:#9aa0a8; --line:#33373e;
+  --gold:#d2ab62; --gold-ink:#d2ab62; --slate:#101215; --slate-ink:#ece9e3;
+  color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--gold-ink)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+[hidden]{display:none!important}
+.brand{display:flex;flex-direction:column;gap:2px}
+.brand b{font-family:var(--f-display);font-weight:700;font-size:23px;line-height:1.1;letter-spacing:.03em;color:var(--gold-ink)}
+.brand span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.7}
+.brand-logo{display:block;max-width:100%;height:auto;max-height:54px;margin:0 0 8px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:7px 12px;cursor:pointer;font-weight:500;font-size:13px;color:var(--ink);display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn.pri{background:var(--gold);border-color:var(--gold);color:#1b1c1e;font-weight:600}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);min-width:0}
+label.f input,label.f select,label.f textarea{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:8px 10px;font-size:13.5px;color:var(--ink);width:100%}
+label.chk{display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer}
+.toast{position:fixed;right:16px;bottom:16px;background:var(--slate);color:var(--slate-ink);padding:10px 14px;border-radius:14px;font-size:13px;z-index:60;max-width:420px}
+.toast.erro{background:#a63d32;color:#fff}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;z-index:50;padding:16px}
+.modal{background:var(--panel);border-radius:20px;max-width:640px;width:100%;max-height:90vh;overflow:auto;padding:20px}
+.auth{min-height:100%;display:grid;place-items:center;padding:24px 16px;background:var(--slate)}
+.auth .card{max-width:420px;width:100%;display:grid;gap:12px;padding:26px;border-radius:22px;box-shadow:0 22px 44px rgba(0,0,0,.13)}
+.auth .brand b{font-size:clamp(26px,8vw,34px);white-space:normal}
+.auth h1.brand{margin:0;font-size:inherit;font-weight:inherit}
