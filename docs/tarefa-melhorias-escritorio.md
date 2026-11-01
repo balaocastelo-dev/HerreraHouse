@@ -164,3 +164,20 @@ Validação concluída após a correção:
 
 Logs, `render.json`, `lugares-2d.png` e `shot-{dia,tarde,noite}.{png,log}` atualizados em `data/cenario-qa/`, fora do Git.
 O registro de verificação e a orientação para executar os testes no Windows também foram atualizados em `docs/escritorio.md`.
+
+### Revisão funcional a partir de `66babef` (01/11/2026)
+
+Os sete itens já estavam implementados na `main` local e remota e foram conferidos na ordem. O teste sem WebGL
+confirmou os oito cliques do 2D no painel compartilhado, inclusive filtros, teclado, ESC dentro do iframe e retorno
+de foco. Painel, modo andar, humanos, CSP e dependências continuam preservados.
+
+A revisão encontrou uma lacuna do item 2: o cadastro `Érica Souza` não ocultava `Erica` escrito sem acento na mensagem.
+O commit `1183272` corrige a comparação dos nomes, incluindo Unicode decomposto, sem substituir trechos de outras
+palavras nem retirar os acentos do restante do texto. A regressão reproduz a falha anterior e verifica a resposta
+real de `ao-vivo?full=1`, mantendo as restrições de perfil e o limite de 60 caracteres.
+
+Validação após a correção: `npm test` passou nas 20 suítes; `node test/escritorio-2d.cjs` e
+`node test/escritorio-3d.cjs` passaram. O relatório confirmou nove humanos nos três horários e nenhum erro
+JavaScript/WebGL ou recurso com falha. Também foram refeitas com `docs/wip/servidor-teste.cjs` + `docs/wip/shot3d.cjs`
+as capturas de 12h, 17h30 e 21h, conferidas visualmente. Logs, `render.json`, `lugares-2d.png` e
+`shot-{dia,tarde,noite}.{png,log}` estão atualizados em `data/cenario-qa/`, fora do Git.

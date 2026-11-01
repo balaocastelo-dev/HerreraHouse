@@ -170,9 +170,10 @@ Os limites de valor mudam em "Regras do escritório".
 
 ### Verificação
 
-Última validação: `main` em `e5c0f35`, com a correção de teste `afa9c25`, em 01/11/2026. As 20 suítes de `npm test`,
-os testes 2D/3D e os renders de 12h, 17h30 e 21h passaram; os sete itens já estavam implementados e não exigiram
-alterações de produção. O teste de consulta segura agora normaliza também os separadores de caminhos do Windows.
+Última validação: `main` a partir de `66babef`, com a correção `1183272`, em 01/11/2026. Os sete itens já estavam
+implementados e foram conferidos na ordem; a revisão corrigiu a ocultação de nomes escritos sem acento nos monitores.
+As 20 suítes de `npm test`, os testes 2D/3D e os renders de 12h, 17h30 e 21h passaram. As três capturas foram
+conferidas visualmente; o relatório 3D registrou nove humanos por horário, sem erros JavaScript/WebGL ou de recursos.
 O registro está em [Resultado da tarefa](tarefa-melhorias-escritorio.md#resultado).
 
 ```powershell
