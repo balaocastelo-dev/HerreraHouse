@@ -186,7 +186,7 @@ execução com `psql`, preparar cada versão conforme esta tabela:
    de `base_app` pelo papel desejado e depois `base` pelo schema desejado. Não basta trocar o
    `search_path`: defaults, função, corpo do trigger, políticas e concessões também têm referências.
 3. Executar o bloco inteiro, de `BEGIN` a `COMMIT`, uma vez por linha da tabela. Por exemplo, com
-   a conexão administrativa já configurada no `psql`, a versão original da imobiliária pode ser aplicada
+   a conexão administrativa já configurada no `psql`, a versão original do schema `base` pode ser aplicada
    a partir da raiz do repositório com:
 
    ```powershell
@@ -197,8 +197,8 @@ execução com `psql`, preparar cada versão conforme esta tabela:
    condicional das tabelas/índices e recria função, trigger e políticas. Se houver erro dentro da
    transação no SQL Editor, executar `ROLLBACK`, corrigir a dependência e executar o bloco completo.
 4. Conferir no schema escolhido as três tabelas, os índices e o trigger `chat_ultima`. A consulta
-   abaixo deve retornar três linhas, todas com `relrowsecurity = true`; trocar `base` ao verificar
-   outra imobiliária:
+   abaixo deve retornar três linhas, todas com `relrowsecurity`, `pode_ler` e `pode_inserir` iguais
+   a `true`; trocar tanto `base` quanto `base_app` ao verificar outra imobiliária:
 
    ```sql
    SELECT n.nspname AS schema, c.relname AS tabela, c.relrowsecurity,
@@ -208,6 +208,26 @@ execução com `psql`, preparar cada versão conforme esta tabela:
    WHERE n.nspname = 'base'
      AND c.relname IN ('chat_conversas', 'chat_participantes', 'chat_mensagens');
    ```
+
+   Conferir também as políticas e o trigger, substituindo `base` pelo mesmo schema:
+
+   ```sql
+   SELECT tablename, policyname, roles, cmd, qual, with_check
+   FROM pg_policies
+   WHERE schemaname = 'base' AND policyname = 'chat_backend'
+   ORDER BY tablename;
+
+   SELECT t.tgname, t.tgenabled, pg_get_triggerdef(t.oid) AS definicao
+   FROM pg_trigger t
+   JOIN pg_class c ON c.oid = t.tgrelid
+   JOIN pg_namespace n ON n.oid = c.relnamespace
+   WHERE n.nspname = 'base' AND c.relname = 'chat_mensagens'
+     AND t.tgname = 'chat_ultima' AND NOT t.tgisinternal;
+   ```
+
+   A primeira consulta deve mostrar uma política por tabela, com o papel `<schema>_app`, comando
+   `ALL` e condições `true`. A segunda deve mostrar um trigger habilitado (`tgenabled = 'O'`),
+   `AFTER INSERT`, chamando a função `chat_atualiza_ultima` do schema escolhido.
 
 5. Conferir que o deploy de cada imobiliária conecta ao banco/schema e papel correspondentes.
    Entrar no sistema, abrir Mensagens, enviar texto a um colega/robô e conferir caixa e não lidas.
@@ -227,14 +247,15 @@ npm test
 O teste inicia o servidor com SQLite temporário, cria um administrador e dois corretores, mantém
 sessões independentes e simula o Gemini em HTTP local. Cobre diretas únicas, salas, não lidas,
 paginação, validações, contatos inativos, leitura/escrita negadas a não participantes (inclusive
-adm), long polling com chegada posterior, isolamento de conversas, logout durante a espera e
-resposta vazia após 25 segundos. Verifica respostas do PC e da nuvem, vários robôs na sala,
+adm), long polling com chegada posterior, isolamento de conversas, logout e desativação do usuário
+durante a espera e resposta vazia após 25 segundos. Verifica respostas do PC e da nuvem, vários robôs na sala,
 espelhamento idempotente e exclusão de rascunhos/conversas de clientes. Também cobre a sala criada
 por corretor sem acesso para administrador alheio, o bloqueio de tarefas de não participantes e
 o fluxo `tarefa:` com dois robôs: criação sem chamada à IA, retirada única pela estação simulada,
-conclusão pela API e retorno à sala com não lidas, sem duplicação ou envio ao WhatsApp. Nenhum PC
-real executa os pedidos do teste. Fecha servidores e SQLite
-antes de remover os dados temporários, inclusive em caso de falha.
+conclusão pela API e retorno à sala com não lidas, sem duplicação ou envio ao WhatsApp. A ação
+`tarefa_pc` na resposta do robô também é verificada: preserva autoria, agente e conversa de origem,
+sem recriar a tarefa ao reler a resposta. Nenhum PC real executa os pedidos do teste. Fecha
+servidores e SQLite antes de remover os dados temporários, inclusive em caso de falha.
 
 O teste automatizado usa SQLite; não aplica nem valida a migração num Postgres real. A aplicação
 por schema e a conferência acima são passos separados da publicação do código.

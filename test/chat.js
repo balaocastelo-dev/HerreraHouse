@@ -319,10 +319,41 @@ const fecha = async (servidor) => {
     semTelefones([confirmacoes, resultados]);
     console.log('ok · tarefa para cada robô, estação recebe uma vez e resultado volta à sala sem duplicar nem enviar WhatsApp');
 
+    // A ação sugerida pela IA também precisa preservar a autoria de quem escreveu no chat.
+    const pedidoRobo = 'Compare os apartamentos disponíveis para a próxima reunião';
+    respostas.push({ mensagem: 'Vou preparar a comparação no meu PC.', acoes: [{ tipo: 'tarefa_pc', pedido: pedidoRobo }] });
+    const sugerida = await envia(ana, robo.id, 'Você pode preparar uma comparação dos apartamentos?');
+    const novasTarefas = all('SELECT * FROM agente_tarefas WHERE id>? ORDER BY id', tarefas.at(-1).id);
+    assert.equal(novasTarefas.length, 1);
+    const tarefaRobo = novasTarefas[0];
+    assert.equal(tarefaRobo.agente, 'apartamentos');
+    assert.equal(tarefaRobo.pedido, pedidoRobo);
+    assert.equal(tarefaRobo.criado_por, a.id);
+    assert.equal(tarefaRobo.para_nome, 'Ana Silva');
+    assert.equal(tarefaRobo.para_telefone, `chat-${robo.id}-apartamentos`);
+    assert.equal(tarefaRobo.status, 'fila');
+    assert.equal(chamadas.length, 4);
+    assert.equal(respostas.length, 0);
+    const respostaTarefa = await le(ana, robo.id, `?desde=${sugerida.id}`);
+    assert.equal(respostaTarefa.mensagens.length, 1);
+    assert.equal(respostaTarefa.mensagens[0].de_agente, 'apartamentos');
+    assert.equal(respostaTarefa.mensagens[0].texto, 'Vou preparar a comparação no meu PC.');
+    await le(ana, robo.id);
+    assert.equal(one('SELECT count(*) n FROM agente_tarefas WHERE id>?', tarefas.at(-1).id).n, 1, 'reler resposta não recria a tarefa sugerida');
+    semTelefones(respostaTarefa);
+    console.log('ok · ação tarefa_pc da resposta do robô preserva autor, agente e conversa de origem');
+
     const revogado = pendente(bruno, (await caixa(bruno)).ate, 401);
     await revogado.esperando();
     await bruno('POST', '/api/logout');
     assert.match((await revogado.promessa).erro, /Sessão expirada/);
+    await bruno('POST', '/api/login', { email: 'bruno@chat.test', senha: 'Teste1234' });
+    const desativado = pendente(bruno, (await caixa(bruno)).ate, 401);
+    await desativado.esperando();
+    await adm('PATCH', `/api/usuarios/${b.id}`, { ativo: 0 });
+    assert.match((await desativado.promessa).erro, /Sessão expirada/);
+    await bruno('GET', '/api/chat/caixa', undefined, 401);
+    await adm('PATCH', `/api/usuarios/${b.id}`, { ativo: 1 });
     await bruno('POST', '/api/login', { email: 'bruno@chat.test', senha: 'Teste1234' });
     const antesEspera = await caixa(bruno), inicio = Date.now();
     const vazio = await bruno('GET', `/api/chat/novidades?desde=${antesEspera.ate}`, undefined, 200, 35000);
@@ -330,7 +361,7 @@ const fecha = async (servidor) => {
     assert.deepEqual(vazio.mensagens, []);
     assert.equal(vazio.ate, antesEspera.ate);
     assert.equal(vazio.nao_lidas_total, antesEspera.nao_lidas_total);
-    console.log('ok · long polling respeita logout e devolve cursor/contador ao encerrar 25 segundos sem novidades');
+    console.log('ok · long polling respeita logout e desativação e devolve cursor/contador após 25 segundos sem novidades');
   } finally {
     await Promise.all([fecha(srv), fecha(ia)]);
     banco?.db.close(); // No Windows, fechar o SQLite antes de remover seu diretório.
