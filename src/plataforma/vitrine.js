@@ -272,12 +272,13 @@ function pagina() {
 <title>${nome} · o sistema imobiliário com inteligência artificial</title>
 <meta name="description" content="Radar de captação, condomínios em 3D, nove agentes de IA no WhatsApp, carteira, CRM, portal com a linha signature e blog com a sua marca. Para corretores e imobiliárias.">
 <link rel="canonical" href="https://corretordofuturo.app/">
-<meta property="og:title" content="${nome} · o corretor do futuro já tem escritório"><meta property="og:description" content="O sistema imobiliário com inteligência artificial: 3D dos prédios, radar de captação, agentes no WhatsApp e portal com a sua marca."><meta property="og:url" content="https://corretordofuturo.app/"><meta property="og:type" content="website"><meta property="og:image" content="https://corretordofuturo.app/plataforma/telas/3d-noite.webp"><meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" href="/icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/site.webmanifest">
+<meta property="og:site_name" content="${nome}"><meta property="og:locale" content="pt_BR"><meta property="og:title" content="${nome} · o corretor do futuro já tem escritório"><meta property="og:description" content="O sistema imobiliário com inteligência artificial: 3D dos prédios, radar de captação, agentes no WhatsApp e portal com a sua marca."><meta property="og:url" content="https://corretordofuturo.app/"><meta property="og:type" content="website"><meta property="og:image" content="https://corretordofuturo.app/plataforma/telas/3d-noite.webp"><meta property="og:image:secure_url" content="https://corretordofuturo.app/plataforma/telas/3d-noite.webp"><meta property="og:image:type" content="image/webp"><meta property="og:image:width" content="2880"><meta property="og:image:height" content="1800"><meta property="og:image:alt" content="Prédio em 3D à noite, com o andar do apartamento destacado em dourado"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${nome} · o corretor do futuro já tem escritório"><meta name="twitter:description" content="O sistema imobiliário com inteligência artificial: 3D dos prédios, radar de captação, agentes no WhatsApp e portal com a sua marca."><meta name="twitter:image" content="https://corretordofuturo.app/plataforma/telas/3d-noite.webp"><meta name="twitter:image:alt" content="Prédio em 3D à noite, com o andar do apartamento destacado em dourado">
 <meta name="theme-color" content="#070b0f">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Cormorant+Garamond:ital,wght@1,600&family=Pinyon+Script&family=IBM+Plex+Sans:wght@400;600&display=swap">
-<link rel="stylesheet" href="/plataforma/site.css?v=7">
-<link rel="preload" as="image" href="${T}3d-poster.webp">
+<link rel="stylesheet" href="/plataforma/site.css?v=8">
+<link rel="preload" as="image" href="${T}3d-poster.webp?v=5">
 <link rel="preload" as="image" href="${C}ondemorar-d-m.webp">
 <script type="application/ld+json">${json(ld)}</script><script type="application/ld+json">${json(faq)}</script>
 </head><body>
@@ -295,8 +296,8 @@ ${topo()}
     </div>
     <div class="palco">
       <div class="palco-tela">
-        <video autoplay muted loop playsinline preload="metadata" poster="${T}3d-poster.webp?v=4" aria-label="Prédio em 3D girando, com o andar do apartamento destacado em dourado">
-          <source src="${T}3d.mp4?v=4" type="video/mp4"></video>
+        <video muted loop playsinline preload="none" poster="${T}3d-poster.webp?v=5" data-webm="${T}3d.webm?v=5" data-mp4="${T}3d.mp4?v=5" aria-label="Prédio em 3D girando, com o andar do apartamento destacado em dourado"></video>
+        <button type="button" class="palco-play" hidden>Ver o prédio em movimento</button>
         <div class="palco-legenda"><b>Condomínio em 3D</b><span>o andar do apartamento em dourado, o entorno de verdade</span></div>
       </div>
       <div class="palco-flutuas">
@@ -525,7 +526,7 @@ ${aoVivo()}
 
 <div class="fixa" aria-hidden="true" hidden><div class="fixa-cx"><span class="fixa-t"><b>Sua imobiliária no ar assim,</b> com a sua marca.</span><a class="btn pri" href="#contato" tabindex="-1">Quero a minha</a><a class="fixa-wa" href="https://wa.me/${wa}" target="_blank" rel="noopener" tabindex="-1" aria-label="WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2l-.6-.3Z"/></svg></a></div></div>
 ${rodape()}
-<script src="/plataforma/site.js?v=5" defer></script>
+<script src="/plataforma/site.js?v=6" defer></script>
 </body></html>`;
 }
 

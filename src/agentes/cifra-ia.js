@@ -1,5 +1,6 @@
 // Cifra das chaves de IA do escritório (AES-256-GCM).
-// Grava com o prefixo neutro. Valores já gravados com o prefixo anterior ainda abrem.
+// Grava com o prefixo neutro. Leitura legada: pacotes já gravados com o prefixo anterior
+// ainda abrem. Não usar esse prefixo para gravar de novo.
 const crypto = require('crypto');
 
 const PREFIXO = 'hh-escritorio-ia:';
@@ -31,4 +32,4 @@ function decifra(material, pacote) {
   return null;
 }
 
-module.exports = { PREFIXO, cifra, decifra };
+module.exports = { PREFIXO, PREFIXO_ANTIGO, cifra, decifra };

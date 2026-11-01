@@ -20,6 +20,7 @@ function casca({ titulo, descricao, caminho, corpo }) {
 <title>${esc(titulo)} · ${nome}</title>
 <meta name="description" content="${esc(descricao)}">
 <link rel="canonical" href="https://corretordofuturo.app${caminho}">
+<link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" href="/icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/site.webmanifest">
 <meta name="theme-color" content="#070b0f">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;600&display=swap">

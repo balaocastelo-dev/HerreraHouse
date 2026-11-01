@@ -22,7 +22,7 @@ a página sai do ar até ser reescrita.
 | Junta tudo | `src/portal/fonte.js` | Lê o ramo `claude/portal-conteudo` (cache de 10 min, cópia em `data/portal-cache`), confere formato e régua contra a ficha de agora e decide o que está no ar. |
 | Formato e régua | `src/portal/validar.js`, `src/portal/regua.js` | O mesmo código no comando de publicar e no site. |
 | Comando | `scripts/portal-publicar.mjs` | Única porta de entrada: `preparar` (fila + fotos em /tmp/portal), `conferir`, `publicar`, `listar`, `retirar`. |
-| Ramo de conteúdo | `claude/portal-conteudo` em `balaocastelo-dev/ruahimoveis` | `indice.json`, `paginas/<CÓDIGO>.json` e `ROTINA.md` (as regras de quem escreve). |
+| Ramo de conteúdo | `claude/portal-conteudo` em `balaocastelo-dev/Corretordofuturo.app` | `indice.json`, `paginas/<CÓDIGO>.json` e `ROTINA.md` (as regras de quem escreve). |
 | Para quem escreve | `/imoveis/dados.json` | A ficha, as fotos e o estado da página de cada imóvel à venda. |
 | Rotina na nuvem | tarefa agendada "Portal da imobiliária - páginas dos imóveis" | Pega os próximos da fila, olha as fotos, escreve, confere e publica. |
 | Contato | `POST /api/publico/portal/interesse` | Lead quente no CRM (mesmo telefone não duplica), interação com o imóvel, a mensagem e o pedido de visita. Armadilha de robô e limite por IP. |

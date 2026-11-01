@@ -9,10 +9,11 @@ const G = require('../condominios/geo');
 const { perto } = require('../condominios/perto');
 const { cena3d } = require('../condominios/cena3d');
 const { apagaCache } = require('../condominios/overpass');
+const { apresentar } = require('../condominios/fonte');
 
 const r = express.Router();
 
-const condominio = (id) => { const c = one('SELECT * FROM condominios WHERE id=?', int(id)); if (!c) falha(404, 'Condomínio não encontrado.'); return c; };
+const condominio = (id) => { const c = one('SELECT * FROM condominios WHERE id=?', int(id)); if (!c) falha(404, 'Condomínio não encontrado.'); return apresentar(c); };
 
 r.get('/condominios', (req, res) => {
   const q = req.query;

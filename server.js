@@ -27,6 +27,25 @@ app.use((req, res, next) => {
   next();
 });
 
+// Ícone do produto em qualquer host. No domínio da plataforma a vitrine redireciona o resto para a home;
+// sem esta rota, /favicon.ico virava o HTML da página. Imobiliária com tema próprio continua trocando o
+// ícone da aba pelo dela (tema.js / app.js); o arquivo daqui é o pedido automático do navegador.
+const ICONE_TIPO = {
+  '/favicon.ico': 'image/x-icon',
+  '/icon.svg': 'image/svg+xml',
+  '/apple-touch-icon.png': 'image/png',
+  '/apple-touch-icon-precomposed.png': 'image/png',
+  '/site.webmanifest': 'application/manifest+json',
+};
+app.use((req, res, next) => {
+  const tipo = ICONE_TIPO[req.path];
+  if (!tipo || (req.method !== 'GET' && req.method !== 'HEAD')) return next();
+  const nome = req.path === '/apple-touch-icon-precomposed.png' ? 'apple-touch-icon.png' : req.path.slice(1);
+  res.setHeader('Cache-Control', 'public, max-age=604800');
+  res.type(tipo);
+  res.sendFile(path.join(__dirname, 'public', nome), (err) => { if (err) next(err); });
+});
+
 // Painel do gestor da plataforma (corretordofuturo.app/gestor): as imobiliárias clientes.
 app.use(require('./src/plataforma/gestor').gestor);
 // Domínio da plataforma (corretordofuturo.app): vitrine do produto, nunca o sistema ou o portal de um cliente.
@@ -149,6 +168,9 @@ app.get(['/', '/index.html'], (req, res) => {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>Imóveis</title>
 <meta name="robots" content="noindex">
 <script src="/ir.js"></script>

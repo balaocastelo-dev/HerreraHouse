@@ -45,8 +45,9 @@ function git(args, opcoes = {}) {
 function remoto() {
   if (process.env.PORTAL_REMOTO) return process.env.PORTAL_REMOTO;
   const linhas = git(['remote', '-v']).split('\n');
-  const alvo = DONO_REPO.split('/')[1];
-  const achado = linhas.find((l) => new RegExp(`[/:]${DONO_REPO.split('/')[0]}/${alvo}(?:\\.git)?\\s`).test(l));
+  const [dono, alvo] = DONO_REPO.split('/');
+  const esc = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const achado = linhas.find((l) => new RegExp(`[/:]${esc(dono)}/${esc(alvo)}(?:\\.git)?\\s`).test(l));
   return achado ? achado.split(/\s+/)[0] : 'origin';
 }
 function curl(url, destino) {

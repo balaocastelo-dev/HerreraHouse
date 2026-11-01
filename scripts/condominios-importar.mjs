@@ -7,6 +7,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 require('../src/config');
+const { FONTE_CASA, FONTE_LEGADA } = require('../src/condominios/fonte');
 const pg = require('pg');
 
 const [arqBase, ...arqsPredios] = process.argv.slice(2);
@@ -33,7 +34,7 @@ async function base(arq) {
         linhas.push('(' + COLS.map((k) => { vals.push(x[k] ?? null); return `$${vals.length}`; }).join(',') + ')');
       }
       const upd = COLS.filter((k) => k !== 'slug').map((k) => {
-        if (k === 'nome' || k === 'nome_busca') return `${k} = CASE WHEN condominios.atualizado_em IS NOT NULL OR condominios.fontes IN ('cadastro','ruah') THEN condominios.${k} ELSE excluded.${k} END`;
+        if (k === 'nome' || k === 'nome_busca') return `${k} = CASE WHEN condominios.atualizado_em IS NOT NULL OR condominios.fontes IN ('${FONTE_CASA}','${FONTE_LEGADA}') THEN condominios.${k} ELSE excluded.${k} END`;
         if (k === 'lat' || k === 'lon' || k === 'geo_fonte') return `${k} = CASE WHEN condominios.geo_fonte = 'ajustado' THEN condominios.${k} ELSE coalesce(excluded.${k}, condominios.${k}) END`;
         if (k === 'tipo') return `tipo = CASE WHEN condominios.atualizado_em IS NOT NULL THEN condominios.tipo ELSE excluded.tipo END`;
         if (SO_SE_VAZIO.has(k)) return `${k} = coalesce(condominios.${k}, excluded.${k})`;
