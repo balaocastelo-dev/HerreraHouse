@@ -64,7 +64,8 @@ r.get('/chat/conversas/:id', (req, res) => {
   if (!desde) lista.reverse();
   const ate = lista.length ? lista[lista.length - 1].id : 0;
   run('UPDATE chat_participantes SET lido_ate=? WHERE conversa_id=? AND usuario_id=? AND lido_ate<?', ate, c.id, req.usuario.id, ate);
-  const { par, ...conversa } = c;
+  // O espelhamento desta leitura pode ter atualizado a última atividade da conversa.
+  const { par, ...conversa } = one('SELECT * FROM chat_conversas WHERE id=?', c.id);
   res.json({ conversa, mensagens: lista, mais, participantes: C.participantes(c.id), digitando: C.digitando(c.id), nao_lidas_total: C.total(req.usuario.id) });
 });
 r.post('/chat/conversas/:id/mensagens', async (req, res) => {

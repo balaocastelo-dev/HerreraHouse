@@ -229,7 +229,25 @@ execução com `psql`, preparar cada versão conforme esta tabela:
    `ALL` e condições `true`. A segunda deve mostrar um trigger habilitado (`tgenabled = 'O'`),
    `AFTER INSERT`, chamando a função `chat_atualiza_ultima` do schema escolhido.
 
-5. Conferir que o deploy de cada imobiliária conecta ao banco/schema e papel correspondentes.
+5. Conferir a conexão de **cada deploy** usando o mesmo banco e papel de sua `DATABASE_URL`.
+   O backend não redefine `search_path`; ele usa o caminho configurado para a conexão/papel.
+   O `SET LOCAL search_path` da migração vale apenas dentro daquela transação, portanto não
+   configura o caminho usado depois pela aplicação. Numa conexão com o papel do backend, executar:
+
+   ```sql
+   SELECT current_user AS papel, current_schema() AS schema_atual,
+          current_setting('search_path') AS caminho;
+
+   SELECT t.nome AS tabela, n.nspname AS schema_resolvido
+   FROM (VALUES ('chat_conversas'), ('chat_participantes'), ('chat_mensagens')) AS t(nome)
+   LEFT JOIN pg_class c ON c.oid = to_regclass(t.nome)
+   LEFT JOIN pg_namespace n ON n.oid = c.relnamespace;
+   ```
+
+   O papel deve corresponder à imobiliária (por exemplo, `ondemorar_app`), e o schema atual
+   e os três schemas resolvidos devem ser o dela (`ondemorar` no exemplo), sem valores nulos.
+   Se não corresponderem, revisar a conexão e a configuração do papel antes de testar a tela;
+   as consultas do chat usam nomes de tabela sem prefixo de schema.
    Entrar no sistema, abrir Mensagens, enviar texto a um colega/robô e conferir caixa e não lidas.
 
 O SQL habilita RLS, revoga acesso às tabelas de `PUBLIC`, `anon` e `authenticated`, concede CRUD ao

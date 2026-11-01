@@ -243,6 +243,10 @@ const fecha = async (servidor) => {
     const aprovada = await le(ana, robo.id);
     assert.equal(aprovada.mensagens.length, 3);
     assert.equal(aprovada.mensagens.at(-1).texto, 'Resposta aprovada depois.');
+    const ultimaAprovada = aprovada.mensagens.at(-1);
+    assert.equal(aprovada.conversa.ultima_id, ultimaAprovada.id, 'leitura que espelha resposta já devolve a última atividade atualizada');
+    assert.equal(aprovada.conversa.ultima_texto, ultimaAprovada.texto);
+    assert.equal(aprovada.conversa.ultima_em, ultimaAprovada.criado_em);
     assert.equal((await le(ana, robo.id)).mensagens.length, 3);
     semTelefones([aprovada, await caixa(ana)]);
     console.log('ok · espelhamento filtra aprovação, participação e conversas de clientes');
