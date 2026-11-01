@@ -143,3 +143,24 @@ Passaram `npm test` (19 suítes), `node test/escritorio-2d.cjs` e `node test/esc
 O relatório confirmou nove humanos nos três horários, sem erros JavaScript/WebGL ou falhas de recursos.
 As capturas de 12h, 17h30 e 21h foram refeitas com `servidor-teste.cjs` + `shot3d.cjs` e conferidas visualmente.
 Os logs e imagens listados acima foram atualizados; esta rodada altera somente o registro da validação.
+
+### Conferência e validação em 01/11/2026
+
+Os sete itens foram conferidos na ordem na `main` em `e5c0f35`, também confirmada no remoto. Os sete commits
+de implementação da tabela acima já pertenciam a essa versão, incluindo os oito cliques do 2D no mesmo painel
+`.j3p-*`. Não restou pendência de implementação. Painel, modo andar, humanos, API, CSP e dependências foram preservados.
+
+O commit `afa9c25` corrige uma falha reproduzida em `npm test`: o teste de consulta segura comparava caminhos
+com `/`, mas o `rg` retorna `\` no Windows. A normalização mantém a mesma lista permitida e as mesmas verificações.
+Foi usado o `rg` já instalado com o VS Code, somente no `PATH` do processo, sem nova instalação.
+
+Validação concluída após a correção:
+
+- `npm test`: as 20 suítes passaram, incluindo clima, escritório, estação e API de IA.
+- `node test/escritorio-2d.cjs`: oito lugares sem WebGL, filtros, teclado e controles do painel aprovados.
+- `node test/escritorio-3d.cjs`: aprovado; nove humanos nos três horários, nenhum erro JavaScript/WebGL ou recurso
+  com falha. Tour, idiomas, clima, som, PC, modo andar, descarte, reabertura e celular continuam funcionando.
+- `docs/wip/servidor-teste.cjs` + `docs/wip/shot3d.cjs`: capturas de 12h, 17h30 e 21h refeitas e conferidas visualmente.
+
+Logs, `render.json`, `lugares-2d.png` e `shot-{dia,tarde,noite}.{png,log}` atualizados em `data/cenario-qa/`, fora do Git.
+O registro de verificação e a orientação para executar os testes no Windows também foram atualizados em `docs/escritorio.md`.

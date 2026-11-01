@@ -169,8 +169,9 @@ Os limites de valor mudam em "Regras do escritório".
 
 ### Verificação
 
-Última validação: `main` em `0b19a9a`, em 30/10/2026. As 19 suítes de `npm test`, os testes 2D/3D e os renders
-de 12h, 17h30 e 21h passaram; os sete itens já estavam implementados e não exigiram alterações de produção.
+Última validação: `main` em `e5c0f35`, com a correção de teste `afa9c25`, em 01/11/2026. As 20 suítes de `npm test`,
+os testes 2D/3D e os renders de 12h, 17h30 e 21h passaram; os sete itens já estavam implementados e não exigiram
+alterações de produção. O teste de consulta segura agora normaliza também os separadores de caminhos do Windows.
 O registro está em [Resultado da tarefa](tarefa-melhorias-escritorio.md#resultado).
 
 ```powershell
@@ -178,6 +179,9 @@ npm test
 node test/escritorio-2d.cjs
 node test/escritorio-3d.cjs
 ```
+
+`npm test` requer `rg` no `PATH`. Nesta validação foi usado o executável já instalado com o VS Code, acrescentando
+sua pasta somente ao `PATH` do processo, sem instalar dependências.
 
 O teste 2D verifica os oito lugares sem WebGL, dicas, clique, Enter/espaço, ESC dentro do iframe, retorno de foco,
 fechamento por botão/fundo e painel em tela cheia. Os filtros das rotas são preservados ao abrir a tela inteira.
