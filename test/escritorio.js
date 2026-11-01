@@ -9,7 +9,7 @@ for (const k of ['DATABASE_URL', 'PLATAFORMA_DATABASE_URL', 'GEMINI_API_KEY', 'A
   const cifraIa = require('../src/agentes/cifra-ia');
   const material = 'postgres://teste';
   const iv = crypto.randomBytes(12);
-  const key = crypto.createHash('sha256').update('ruah-escritorio-ia:' + material).digest();
+  const key = crypto.createHash('sha256').update(cifraIa.PREFIXO_ANTIGO + material).digest();
   const c = crypto.createCipheriv('aes-256-gcm', key, iv);
   const enc = Buffer.concat([c.update('AIzaANTIGA', 'utf8'), c.final()]);
   const pacote = [iv, c.getAuthTag(), enc].map((b) => b.toString('base64')).join('.');

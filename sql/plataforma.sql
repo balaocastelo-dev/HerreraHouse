@@ -1,6 +1,7 @@
 -- Herrera HOUSE IA · plataforma de imobiliárias (painel do gestor), 28/10/2026.
 -- Cada imobiliária é um schema próprio (ondemorar, cademeuap, …) com um usuário de banco só dela.
--- O schema "base" é o molde e a base comum; não é uma imobiliária. O slug "ruah" continua reservado.
+-- O schema "base" é o molde e a base comum; não é uma imobiliária.
+-- O slug do schema antigo continua reservado até o dono aplicar a migração em sql/ (não rodar sem OK).
 -- O painel do gestor entra com o usuário plataforma_app, que NÃO lê as tabelas das imobiliárias:
 -- só a tabela de cadastro (plataforma.*) e as funções abaixo (SECURITY DEFINER), que devolvem números.
 -- O usuário plataforma_app é criado à parte (com senha), fora deste arquivo.

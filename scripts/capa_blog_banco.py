@@ -23,7 +23,7 @@ sys.path.insert(0, str(FABRICA))
 import capa_blog as c  # noqa: E402  (o gerador do Balão)
 
 EU = "capa_blog_banco.py"
-REPO = os.environ.get("PLATAFORMA_REPO", "balaocastelo-dev/ruahimoveis")
+REPO = os.environ.get("PLATAFORMA_REPO", "balaocastelo-dev/Corretordofuturo.app")
 c.FILA = f"https://raw.githubusercontent.com/{REPO}/refs/heads/plataforma/banco-materias/capas/pendentes.json"
 c.REPO_URL = f"https://github.com/{REPO}.git"
 c.REPO = Path(os.environ.get("BANCO_REPO", str(c.RAIZ / "_banco_repo")))

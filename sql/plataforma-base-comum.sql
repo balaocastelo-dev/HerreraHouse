@@ -9,6 +9,7 @@ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public AS $f$
 DECLARE c record; papel text := p_slug || '_app';
   base_cols text := 'id,fisgar_id,portal,link,titulo,tipo,negocio,finalidade,logradouro,numero,complemento,bairro,cidade,uf,cep,lat,lon,valor,valor_condominio,iptu,quartos,suites,banheiros,vagas,area_util,area_total,anunciante_nome,anunciante_tipo,publicado_em,fotos';
 BEGIN
+  -- O segundo nome é o schema antigo, reservado enquanto a migração (só com OK do dono) não rodou.
   IF p_slug IN ('base', 'ruah') OR NOT EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = p_slug) THEN RAISE EXCEPTION 'imobiliária inválida'; END IF;
   IF EXISTS (SELECT 1 FROM pg_class WHERE relnamespace = p_slug::regnamespace AND relname = 'fisguei_anuncios' AND relkind = 'v') THEN RETURN; END IF; -- já é comum
   -- chaves que apontam para a tabela própria de anúncios saem (os ids passam a ser os da base comum)

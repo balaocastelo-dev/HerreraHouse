@@ -27,6 +27,17 @@ function exec(sql, params) {
 
 const one = (sql, ...p) => exec(sql, p).rows[0];
 const all = (sql, ...p) => exec(sql, p).rows;
+function leitura(sql, opts = {}) {
+  const t = traduz(sql);
+  const r = consulta(t.text, [], { leitura: true, timeoutMs: opts.timeoutMs });
+  if (r && r.erro) {
+    const e = new Error(r.erro.message);
+    Object.assign(e, r.erro);
+    e.sql = t.text;
+    throw e;
+  }
+  return (r.rows || []).map(paraBuffer);
+}
 const run = (sql, ...p) => {
   const r = exec(sql, p);
   return { changes: r.rowCount, lastInsertRowid: r.rows[0] ? r.rows[0].id : undefined };
@@ -41,4 +52,4 @@ function audit(usuarioId, acao, detalhe) {
   run('INSERT INTO auditoria(usuario_id,acao,detalhe) VALUES(?,?,?)', usuarioId ?? null, acao, detalhe ? String(detalhe).slice(0, 1000) : null);
 }
 
-module.exports = { db: null, one, all, run, getConfig, setConfig, audit, PG: true };
+module.exports = { db: null, one, all, run, leitura, getConfig, setConfig, audit, PG: true };

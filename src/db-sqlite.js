@@ -1,12 +1,12 @@
 // Banco SQLite embutido no Node (node:sqlite). Nenhum programa extra para instalar.
 const fs = require('fs');
-const path = require('path');
 const { DatabaseSync } = require('node:sqlite');
 const { DATA_DIR } = require('./config');
+const { caminhoDoBanco } = require('./db-arquivo');
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
 function arquivoLocal() {
-  return process.env.HOUSE_DB || path.join(DATA_DIR, 'house.db');
+  return caminhoDoBanco(DATA_DIR, { houseDb: process.env.HOUSE_DB, existe: (p) => fs.existsSync(p) });
 }
 const db = new DatabaseSync(arquivoLocal());
 db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
@@ -493,6 +493,13 @@ CREATE INDEX IF NOT EXISTS ix_apilog_em ON api_log(em);`);
 const one = (sql, ...p) => db.prepare(sql).get(...p);
 const all = (sql, ...p) => db.prepare(sql).all(...p);
 const run = (sql, ...p) => db.prepare(sql).run(...p);
+// SQLite do Node não tem transação READ ONLY nem statement_timeout. query_only impede escrita
+// nesta conexão enquanto a consulta roda (o JS é síncrono, então ninguém escreve no meio).
+function leitura(sql) {
+  db.exec('PRAGMA query_only = ON');
+  try { return db.prepare(sql).all(); }
+  finally { db.exec('PRAGMA query_only = OFF'); }
+}
 
 function getConfig(k) { const r = one('SELECT valor FROM config WHERE chave=?', k); return r ? r.valor : null; }
 function setConfig(k, v) {
@@ -503,4 +510,4 @@ function audit(usuarioId, acao, detalhe) {
   run('INSERT INTO auditoria(usuario_id,acao,detalhe) VALUES(?,?,?)', usuarioId ?? null, acao, detalhe ? String(detalhe).slice(0, 1000) : null);
 }
 
-module.exports = { db, one, all, run, getConfig, setConfig, audit, PG: false };
+module.exports = { db, one, all, run, leitura, getConfig, setConfig, audit, PG: false };

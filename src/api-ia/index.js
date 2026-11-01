@@ -1,11 +1,12 @@
 // Controle do sistema por IAs: chave de API em qualquer rota /api + rotas /api/ia (catálogo, estado, executar).
 const express = require('express');
-const { one, all, run, getConfig, setConfig, audit, PG } = require('../db');
+const { one, all, run, leitura, getConfig, setConfig, audit, PG } = require('../db');
 const { falha, txt, int } = require('../util');
 const A = require('../auth');
 const cfg = require('../config');
 const K = require('./chaves');
 const R = require('./registro');
+const C = require('./consulta-segura');
 
 // ---- entra pela chave: Authorization: Bearer hh_... (ou x-api-key) ----
 function porChave(req, res, next) {
@@ -163,12 +164,13 @@ r.get('/ia/esquema', (req, res) => {
   res.json(tabelas.map((x) => ({ tabela: x.name, colunas: all(`PRAGMA table_info(${x.name})`).map((c) => `${c.name} ${c.type}`) })));
 });
 r.post('/ia/consulta', (req, res) => {
-  const sql = String((req.body || {}).sql || '').trim().replace(/;\s*$/, '');
-  if (!/^(select|with)\b/i.test(sql)) falha(400, 'Só consulta de leitura (SELECT ou WITH).');
-  if (/;/.test(sql) || /\b(insert|update|delete|drop|alter|create|grant|truncate|copy)\b/i.test(sql)) falha(400, 'Comando não permitido nesta rota.');
-  const lim = Math.min(5000, int((req.body || {}).limite) || 500);
-  const final = /\blimit\b/i.test(sql) ? sql : `${sql} LIMIT ${lim}`;
-  try { res.json({ linhas: all(final) }); } catch (e) { falha(400, 'Consulta recusada: ' + e.message); }
+  if (!A.veTudo(req.usuario)) falha(403, 'Só adm e gestor consultam o banco por SQL.');
+  let preparado;
+  try { preparado = C.prepararConsulta(String((req.body || {}).sql || ''), { limite: (req.body || {}).limite }); }
+  catch (e) { falha(400, e.message); }
+  try {
+    res.json({ linhas: leitura(preparado.sql, { timeoutMs: preparado.timeoutMs }), limite: preparado.limite });
+  } catch (e) { falha(400, 'Consulta recusada: ' + e.message); }
 });
 
 // ---- uma ferramenta só: executa qualquer ação pelo nome ----

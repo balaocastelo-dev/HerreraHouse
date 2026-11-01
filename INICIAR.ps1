@@ -63,13 +63,19 @@ if ($emUso) {
   Start-Process $url; Start-Sleep 2; exit 0
 }
 
-# 4) Backup diário do banco (guarda 14 dias)
-if (Test-Path 'data\house.db') {
+# 4) Backup diário do banco (guarda 14 dias).
+# O resolvedor é o mesmo do sistema: data/house.db, ou o arquivo anterior se o novo ainda não existir.
+$banco = 'data\house.db'
+try {
+  $resolvido = node -e "const fs=require('fs');const path=require('path');const a=require('./src/db-arquivo');process.stdout.write(a.caminhoDoBanco(path.resolve('data'),{existe:(p)=>fs.existsSync(p)}));"
+  if ($resolvido) { $banco = $resolvido }
+} catch {}
+if (Test-Path -LiteralPath $banco) {
   $dia = Get-Date -Format 'yyyy-MM-dd'
   $dest = Join-Path 'data\backups' $dia
   if (-not (Test-Path $dest)) {
     New-Item -ItemType Directory -Force -Path $dest | Out-Null
-    Copy-Item 'data\house.db*' $dest -Force
+    Copy-Item (Join-Path (Split-Path -Parent $banco) ((Split-Path -Leaf $banco) + '*')) $dest -Force
     Get-ChildItem 'data\backups' -Directory | Sort-Object Name -Descending | Select-Object -Skip 14 | Remove-Item -Recurse -Force
     Linha "  [ok] Backup do banco: data\backups\$dia" Green
   }
