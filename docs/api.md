@@ -159,7 +159,7 @@ curl -s "$BASE/api/ia/ferramentas.json?escopo=imoveis" -H "Authorization: Bearer
 | `GET /api/ia/eventos?desde=<id>` | o que mudou desde um ponto (para o robô acompanhar sem ficar varrendo) |
 | `POST /api/ia/executar` | executa qualquer ação pelo nome |
 | `GET /api/ia/esquema` | tabelas e colunas do banco desta imobiliária (escopo `sql`) |
-| `POST /api/ia/consulta` | `SELECT` de leitura, com limite automático (escopo `sql`) |
+| `POST /api/ia/consulta` | `SELECT` de leitura, uma por vez, tabelas da imobiliária, limite e tempo máximo (escopo `sql`, só adm e gestor) |
 | `GET /api/ia/config` · `PUT /api/ia/config` | lê e grava configurações do banco (gravar: só adm; segredos saem mascarados) |
 | `GET /api/chaves` · `POST /api/chaves` · `DELETE /api/chaves/:id` · `GET /api/chaves/log` | as chaves de API |
 
@@ -175,7 +175,7 @@ curl -s -X POST "$BASE/api/ia/executar" -H "Authorization: Bearer $CHAVE" -H 'Co
   -d '{"acao":"imoveis.localizarDonoLote","dados":{"etapa":"sem_dono"}}'
 ```
 
-**Consulta ao banco** (leitura; `INSERT`, `UPDATE`, `DELETE`, `DROP` e `;` são recusados):
+**Consulta ao banco** (leitura; um SELECT por vez, sem comentário, sem função perigosa, sem tabela de fora da imobiliária; `LIMIT` máximo 500):
 
 ```bash
 curl -s -X POST "$BASE/api/ia/consulta" -H "Authorization: Bearer $CHAVE" -H 'Content-Type: application/json' \
@@ -5690,7 +5690,7 @@ curl -s -X POST "$BASE/gestor-api/imobiliarias/2/situacao" -H "Cookie: gestor_se
 
 - **Resposta:** `{"ok":true,"id":5,"slug":"casaprado","publicada":true,"aviso":null}` (`aviso` traz a mensagem quando a publicação na Vercel falhou)
 - **Erros:** 403 sem `x-gestor`; 401; 400 `Informe o nome da imobiliária.`; 400 `Nome técnico inválido: use letras e números (começando por letra).`; 400 `Informe o e-mail do administrador da imobiliária.`; 400 `A senha do administrador precisa ter pelo menos 8 caracteres.`; 409 `Já existe uma imobiliária com o nome técnico "<slug>".`; 400 `Não foi possível criar o banco: <erro>`; 502 `Vercel: <mensagem>` (nas chamadas internas à Vercel).
-- **Efeitos:** insere em `plataforma.imobiliarias` com `situacao='implantacao'`, `link` e `dominio` iguais a `https://<slug>.corretordofuturo.app`; chama `plataforma.criar_imobiliaria(slug, senha do banco, nome, e-mail, hash da senha)`, que **cria o schema/banco da imobiliária** e o usuário administrador dela (se isso falhar, o cadastro é desfeito); gera um `SECRET_KEY` de 32 bytes e guarda `{dbUrl, segredo}` **cifrado** (AES-256-GCM com chave derivada de `SECRET_KEY + '|plataforma'`) em `imobiliarias.db_url_cifrada`; com `VERCEL_TOKEN`, **cria o projeto na Vercel** ligado ao repositório `balaocastelo-dev/ruahimoveis` com as variáveis de ambiente (as que terminam em `URL`/`KEY` como `encrypted`), **liga o domínio `<slug>.corretordofuturo.app`** e dispara o primeiro deploy de produção, marcando `publicada=1` e `situacao='ativa'`. Grava `plataforma.eventos` tipo `criou`.
+- **Efeitos:** insere em `plataforma.imobiliarias` com `situacao='implantacao'`, `link` e `dominio` iguais a `https://<slug>.corretordofuturo.app`; chama `plataforma.criar_imobiliaria(slug, senha do banco, nome, e-mail, hash da senha)`, que **cria o schema/banco da imobiliária** e o usuário administrador dela (se isso falhar, o cadastro é desfeito); gera um `SECRET_KEY` de 32 bytes e guarda `{dbUrl, segredo}` **cifrado** (AES-256-GCM com chave derivada de `SECRET_KEY + '|plataforma'`) em `imobiliarias.db_url_cifrada`; com `VERCEL_TOKEN`, **cria o projeto na Vercel** ligado ao repositório `balaocastelo-dev/Corretordofuturo.app` com as variáveis de ambiente (as que terminam em `URL`/`KEY` como `encrypted`), **liga o domínio `<slug>.corretordofuturo.app`** e dispara o primeiro deploy de produção, marcando `publicada=1` e `situacao='ativa'`. Grava `plataforma.eventos` tipo `criou`.
 - **Exemplo:**
 ```bash
 curl -s -X POST "$BASE/gestor-api/imobiliarias" -H "Cookie: gestor_sessao=$CHAVE" -H 'x-gestor: 1' -H 'Content-Type: application/json' -d '{"nome":"Casa Prado","admin_email":"adm@casaprado.com.br","admin_senha":"senha1234","plano":"essencial","mensalidade":497}'
@@ -5701,7 +5701,7 @@ curl -s -X POST "$BASE/gestor-api/imobiliarias" -H "Cookie: gestor_sessao=$CHAVE
 - **O que faz:** mostra as variáveis de ambiente para publicar a imobiliária à mão na Vercel, **inclusive a conexão do banco e o `SECRET_KEY` em claro**.
 - **Entrada:** nenhuma.
 - **Query:** nenhuma.
-- **Resposta:** `{"variaveis":{"DATABASE_URL":"postgres://casaprado_app.yufv…:…@aws-1-us-west-2.pooler.supabase.com:6543/postgres","SECRET_KEY":"…","CLIENTE_NOME":"Casa Prado","EMPRESA":"Casa Prado","BLOG_NOME":"Casa Prado Blog","IA_MODO":"desligado","RADAR_PORTAIS":"0","FISGUEI_ROBO":"0","ESCRITORIO":"0","PUBLIC_URL":"https://casaprado.corretordofuturo.app","PORTAL_FUNDO":"lagoa"},"repo":"balaocastelo-dev/ruahimoveis","dominio":"casaprado.corretordofuturo.app","vercel_automatico":true}`; para uma imobiliária instalada antes do painel, `{"variaveis":null,"aviso":"Esta imobiliária foi instalada antes do painel: as variáveis estão no projeto dela na Vercel."}`
+- **Resposta:** `{"variaveis":{"DATABASE_URL":"postgres://USUARIO:SENHA@HOST:5432/postgres","SECRET_KEY":"…","CLIENTE_NOME":"Casa Prado","EMPRESA":"Casa Prado","BLOG_NOME":"Casa Prado Blog","IA_MODO":"desligado","RADAR_PORTAIS":"0","FISGUEI_ROBO":"0","ESCRITORIO":"0","PUBLIC_URL":"https://casaprado.corretordofuturo.app","PORTAL_FUNDO":"lagoa"},"repo":"balaocastelo-dev/Corretordofuturo.app","dominio":"casaprado.corretordofuturo.app","vercel_automatico":true}`; para uma imobiliária instalada antes do painel, `{"variaveis":null,"aviso":"Esta imobiliária foi instalada antes do painel: as variáveis estão no projeto dela na Vercel."}`
 - **Erros:** 401; 404 `Imobiliária não encontrada.`
 - **Efeitos:** **decifra e expõe segredos**; grava `plataforma.eventos` tipo `viu_instalacao`.
 - **Exemplo:**

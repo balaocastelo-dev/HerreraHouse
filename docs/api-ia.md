@@ -32,7 +32,7 @@ somente-leitura, limite por minuto e registro de cada chamada.
 (`127.0.0.1:PORT` no PC, o próprio host na Vercel) repassando a chave — por isso vale exatamente a mesma
 permissão da chamada direta.
 
-`POST /api/ia/consulta` só aceita `SELECT`/`WITH`, recusa `;` e qualquer comando de escrita, e força `LIMIT`.
+`POST /api/ia/consulta` (só adm e gestor) aceita um `SELECT` ou `WITH … SELECT` por vez, sem comentário e sem segundo comando. Recusa escrita, função perigosa (`pg_sleep`, `pg_read_file`, `lo_*`, `dblink`, `copy`, `set_config`, `pg_terminate_backend` e afins) e tabela fora da imobiliária. Força `LIMIT` de no máximo 500. No Postgres roda em transação só de leitura com tempo limite; no SQLite do PC a conexão fica `query_only` durante a consulta.
 
 ## Ressalva: painel do gestor
 `porChave` está montado em `/gestor-api`, mas a chave pertence a um usuário da imobiliária, e o invólucro

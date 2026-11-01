@@ -236,7 +236,7 @@ const L = [
   ['ia.eventos', 'GET', '/api/ia/eventos', 'painel', 'O que mudou desde um ponto (auditoria, leads, mensagens) para o robô acompanhar.', '', 'desde:n,limite:n'],
   ['ia.executar', 'POST', '/api/ia/executar', 'painel', 'Executa qualquer ação deste catálogo pelo nome (uma ferramenta só para a IA).', 'acao*,dados,query'],
   ['ia.esquema', 'GET', '/api/ia/esquema', 'sql', 'Tabelas e colunas do banco desta imobiliária.', '', 'tabela'],
-  ['ia.consulta', 'POST', '/api/ia/consulta', 'sql', 'Consulta SELECT de leitura ao banco, com limite automático.', 'sql*,limite:n'],
+  ['ia.consulta', 'POST', '/api/ia/consulta', 'sql', 'Consulta SELECT de leitura ao banco: uma por vez, tabelas da imobiliária, limite e tempo máximo.', 'sql*,limite:n'],
   ['chaves.listar', 'GET', '/api/chaves', 'config', 'Chaves de API criadas, com escopos, uso e último acesso.'],
   ['chaves.criar', 'POST', '/api/chaves', 'config', 'Cria uma chave de API (a chave aparece uma única vez).', 'nome*,usuario_id:n,escopos:l,somente_leitura:b,limite_min:n,ips:l,dias:n'],
   ['chaves.revogar', 'DELETE', '/api/chaves/:id', 'config', 'Revoga a chave na hora.'],

@@ -62,7 +62,33 @@ const assert = require('assert');
   assert(JSON.stringify(esq).includes('codigo'));
   const cons = ok(await req('POST', '/api/ia/consulta', { sql: 'SELECT count(*) AS n FROM imoveis' }, true), 'consulta de leitura');
   assert.equal(cons.linhas[0].n, 1);
-  assert.equal((await req('POST', '/api/ia/consulta', { sql: 'DELETE FROM imoveis' }, true)).s, 400, 'escrita recusada na consulta');
+  assert.equal(cons.limite, 500);
+  const dbMod = require('../src/db');
+  assert.throws(() => dbMod.leitura('DELETE FROM imoveis'), /readonly/);
+  assert.equal(dbMod.leitura('SELECT count(*) AS n FROM imoveis')[0].n, 1);
+  const cap = ok(await req('POST', '/api/ia/consulta', {
+    sql: 'WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i+1 FROM n WHERE i < 20) SELECT i FROM n LIMIT 20', limite: 3,
+  }, true), 'LIMIT do cliente não passa do teto');
+  assert.equal(cap.linhas.length, 3);
+  assert.equal(cap.limite, 3);
+  const junta = ok(await req('POST', '/api/ia/consulta', { sql: 'SELECT i.codigo FROM imoveis i JOIN leads l ON l.nome = \'Cliente IA\'' }, true), 'join de tabelas permitidas');
+  assert.equal(junta.linhas[0].codigo, im.codigo);
+  for (const sql of [
+    'DELETE FROM imoveis',
+    'SELECT 1; SELECT 2',
+    'SELECT pg_sleep(1)',
+    'SELECT pg_read_file(\'/etc/passwd\')',
+    'SELECT lo_import(\'/tmp/x\')',
+    'SELECT dblink(\'host=x\', \'SELECT 1\')',
+    'SELECT set_config(\'a\', \'b\', false)',
+    'SELECT pg_terminate_backend(1)',
+    'SELECT/**/1',
+    'SELECT 1 --\n',
+    'SELECT * FROM pg_catalog.pg_tables',
+    'SELECT * FROM sessoes',
+    'SELECT senha_hash FROM usuarios',
+    'COPY imoveis TO STDOUT',
+  ]) assert.equal((await req('POST', '/api/ia/consulta', { sql }, true)).s, 400, 'bloqueada: ' + sql);
 
   // configuração
   ok(await req('PUT', '/api/ia/config', { chave: 'teste_api', valor: 'valor' }, true), 'configuração gravada');
@@ -148,6 +174,8 @@ const assert = require('assert');
   for (const [m, url, body] of [['GET', '/api/chaves'], ['GET', '/api/chaves/log'], ['POST', '/api/chaves', { nome: 'Não' }], ['DELETE', '/api/chaves/1']]) {
     assert.equal((await como(ckC, m, url, body)).s, 403, 'corretor não mexe em chave (' + m + ' ' + url + ')');
   }
+  assert.equal((await como(ckC, 'POST', '/api/ia/consulta', { sql: 'SELECT count(*) AS n FROM imoveis' })).s, 403, 'corretor não consulta SQL livre');
+  assert.equal((await como(ckG, 'POST', '/api/ia/consulta', { sql: 'SELECT count(*) AS n FROM imoveis' })).s, 200, 'gestor consulta SQL de leitura');
 
   const html = await (await fetch(base + '/app.html')).text();
   assert.ok(html.includes('/chaves.js'), 'a tela do sistema carrega chaves.js');

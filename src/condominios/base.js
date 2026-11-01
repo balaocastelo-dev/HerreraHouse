@@ -2,6 +2,7 @@
 const { one, all, run } = require('../db');
 const cfg = require('../config');
 const G = require('./geo');
+const { apresentar, fontesVisiveis } = require('./fonte');
 
 const ATIVAS_RADAR = "('nova','em_contato','carta_enviada','aguardando_aprovacao')";
 const FORA_FISGUEI = "('descartado','captado')";
@@ -24,7 +25,7 @@ const limpaCache = () => { contornos = null; };
 /** Acha o condomínio de um endereço. Devolve { condominio, como, confianca, alternativas }. */
 function reconhecer({ cep, numero, logradouro, lat, lon, condominio_nome, bairro } = {}) {
   const c = G.soDigitos(cep), n = G.numero(numero);
-  const pega = (id, como, confianca) => ({ condominio: one('SELECT * FROM condominios WHERE id=?', id), como, confianca });
+  const pega = (id, como, confianca) => ({ condominio: apresentar(one('SELECT * FROM condominios WHERE id=?', id)), como, confianca });
   if (c && n) {
     const l = all('SELECT id FROM condominios WHERE cep=? AND numero=? ORDER BY (situacao=\'ativa\') DESC, id', c, n);
     if (l.length) return { ...pega(l[0].id, 'CEP e número', 'alta'), alternativas: l.slice(1).map((x) => one('SELECT id,nome FROM condominios WHERE id=?', x.id)) };
@@ -189,6 +190,7 @@ function listar({ q, bairro, tipo, alvo, comVenda, ordem = 'venda', dir, pagina 
   const itens = all(`SELECT c.id, c.nome, c.tipo, c.bairro, c.logradouro, c.numero, c.cep, c.lat, c.lon, c.andares, c.torres, c.unidades, c.fontes, c.alvo, c.situacao, c.slug,
       coalesce(op.n,0) radar, coalesce(fg.n,0) fisguei, coalesce(im.n,0) carteira, coalesce(fg.v, op.v, im.v) preco_medio${ordem === 'giro' ? ', coalesce(g.n,0) giro' : ''} ${de} ORDER BY ${ordemSQL(ordem, dir)} LIMIT ? OFFSET ?`,
   ...p, porPagina, (Math.max(1, pagina) - 1) * porPagina);
+  for (const c of itens) c.fontes = fontesVisiveis(c.fontes);
   const resumo = one(`SELECT count(*) total, sum(CASE WHEN tipo='vertical' THEN 1 ELSE 0 END) verticais, sum(CASE WHEN tipo='horizontal' THEN 1 ELSE 0 END) horizontais,
     sum(CASE WHEN lat IS NOT NULL THEN 1 ELSE 0 END) no_mapa, sum(alvo) alvos FROM condominios WHERE coalesce(tipo,'') <> 'comercial'`);
   return { total, pagina: +pagina, porPagina, itens, resumo };

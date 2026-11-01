@@ -1,6 +1,6 @@
 # Herrera HOUSE IA
 
-Sistema imobiliário com IA, feito para substituir as funções do Kenlo e do Fisgar. O nome do sistema e o da imobiliária vêm da configuração (`SISTEMA_NOME`, `CLIENTE_NOME`, `EMPRESA` no `.env`). Roda no PC do escritório e na rede local (celular dos corretores).
+Sistema imobiliário com IA do Corretor do Futuro, feito para substituir as funções do Kenlo e do Fisgar. O nome do sistema e o da imobiliária vêm da configuração (`SISTEMA_NOME`, `CLIENTE_NOME`, `EMPRESA` no `.env`). Roda no PC do escritório e na rede local (celular dos corretores).
 
 ## O que tem
 
