@@ -1,0 +1,12 @@
+{
+  "name": "Herrera HOUSE IA",
+  "short_name": "Corretor do Futuro",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any" }
+  ],
+  "theme_color": "#070b0f",
+  "background_color": "#070b0f",
+  "display": "browser",
+  "start_url": "/"
+}

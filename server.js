@@ -27,6 +27,25 @@ app.use((req, res, next) => {
   next();
 });
 
+// Ícone do produto em qualquer host. No domínio da plataforma a vitrine redireciona o resto para a home;
+// sem esta rota, /favicon.ico virava o HTML da página. Imobiliária com tema próprio continua trocando o
+// ícone da aba pelo dela (tema.js / app.js); o arquivo daqui é o pedido automático do navegador.
+const ICONE_TIPO = {
+  '/favicon.ico': 'image/x-icon',
+  '/icon.svg': 'image/svg+xml',
+  '/apple-touch-icon.png': 'image/png',
+  '/apple-touch-icon-precomposed.png': 'image/png',
+  '/site.webmanifest': 'application/manifest+json',
+};
+app.use((req, res, next) => {
+  const tipo = ICONE_TIPO[req.path];
+  if (!tipo || (req.method !== 'GET' && req.method !== 'HEAD')) return next();
+  const nome = req.path === '/apple-touch-icon-precomposed.png' ? 'apple-touch-icon.png' : req.path.slice(1);
+  res.setHeader('Cache-Control', 'public, max-age=604800');
+  res.type(tipo);
+  res.sendFile(path.join(__dirname, 'public', nome), (err) => { if (err) next(err); });
+});
+
 // Painel do gestor da plataforma (corretordofuturo.app/gestor): as imobiliárias clientes.
 app.use(require('./src/plataforma/gestor').gestor);
 // Domínio da plataforma (corretordofuturo.app): vitrine do produto, nunca o sistema ou o portal de um cliente.
@@ -144,7 +163,7 @@ app.get(['/', '/index.html'], (req, res) => {
   if (logado || semUsuarios || APP_HOSTS.has(String(req.hostname || '').toLowerCase())) return telaDoSistema(req, res);
   // o endereço depois do # não chega ao servidor: a página decide (com #/... vai para /entrar, senão para /imoveis)
   res.setHeader('Cache-Control', 'no-cache');
-  res.type('html').send('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Imóveis</title><meta name="robots" content="noindex"><script src="/ir.js"></script><noscript><meta http-equiv="refresh" content="0;url=/imoveis"></noscript></head><body><a href="/imoveis">Ver os imóveis</a></body></html>');
+  res.type('html').send('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" href="/icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><title>Imóveis</title><meta name="robots" content="noindex"><script src="/ir.js"></script><noscript><meta http-equiv="refresh" content="0;url=/imoveis"></noscript></head><body><a href="/imoveis">Ver os imóveis</a></body></html>');
 });
 // Humanos, retratos, texturas do cenário e three.js mudam raramente: cache de 7 dias no navegador.
 for (const p of ['plataforma/pessoas', 'plataforma/agentes', 'plataforma/cenario', 'vendor']) app.use('/' + p, express.static(path.join(PUB, p), { index: false, maxAge: '7d' }));
