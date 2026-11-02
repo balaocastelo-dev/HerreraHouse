@@ -13,6 +13,18 @@ const { criarServidor, CHAVE, NOVA, TOKEN } = require('./cerebro');
     browser = await chromium.launch(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : { channel: 'chrome' });
     const context = await browser.newContext({ viewport: { width: 1440, height: 1100 }, timezoneId: 'UTC' });
     const page = await context.newPage(), erros = [];
+    const falharProximaConsulta = () => page.route('**/gestor-api/cerebro?periodo=*', (r) => r.fulfill({
+      status: 500, contentType: 'application/json', body: JSON.stringify({ erro: 'Falha simulada na leitura da configuração.' }),
+    }), { times: 1 });
+    async function conferirFalhaAposGravar() {
+      await page.getByText('Não foi possível carregar a configuração. Use Atualizar consumo para tentar novamente.', { exact: true }).waitFor();
+      await page.waitForFunction(() => document.querySelector('#ia-atualizar')?.disabled === false);
+      for (const nome of ['Guardar', 'Testar', 'Atualizar modelos', 'Remover']) {
+        assert.equal(await page.getByRole('button', { name: nome, exact: true }).isDisabled(), true, nome + ' não pode usar a configuração anterior após gravar');
+      }
+      assert.equal(await page.locator('[name=modelo]').isDisabled(), true);
+      assert.equal(await page.getByLabel('Nova chave', { exact: true }).inputValue(), '');
+    }
     page.on('pageerror', (e) => erros.push(e.message));
     await page.route('https://fonts.**', (r) => r.abort());
     await page.goto(base + '/gestor/cerebro');
@@ -44,9 +56,14 @@ const { criarServidor, CHAVE, NOVA, TOKEN } = require('./cerebro');
     assert.equal(estado.chave, CHAVE); assert.equal(estado.modelo, 'gemini-pro-teste');
     assert.equal(estado.gravacoes.at(-1)[2], true);
     await page.getByLabel('Nova chave', { exact: true }).fill(NOVA);
+    await falharProximaConsulta();
     await page.getByRole('button', { name: 'Guardar', exact: true }).click();
+    await conferirFalhaAposGravar();
+    assert.equal(estado.chave, NOVA, 'a troca já foi gravada apesar da falha na consulta seguinte');
+    await page.getByRole('button', { name: 'Atualizar consumo', exact: true }).click();
     await page.waitForFunction(() => document.querySelector('#ia-estado')?.textContent.includes('…3210'));
     await page.waitForFunction(() => document.querySelector('#ia-testar')?.disabled === false);
+    assert.equal(await page.locator('[name=modelo]').inputValue(), 'gemini-pro-teste');
     assert.equal(await page.getByLabel('Nova chave', { exact: true }).inputValue(), '');
     assert.ok(!(await page.content()).includes(NOVA));
     assert.match(await page.locator('#ia-estado').innerText(), /30\/10\/2026, 14:35:00/);
@@ -75,9 +92,16 @@ const { criarServidor, CHAVE, NOVA, TOKEN } = require('./cerebro');
     await page.getByRole('button', { name: 'Cancelar', exact: true }).click();
     assert.equal(estado.chave, NOVA);
     await page.getByRole('button', { name: 'Remover', exact: true }).click();
+    await falharProximaConsulta();
     await page.getByRole('button', { name: 'Remover chave', exact: true }).click();
+    await conferirFalhaAposGravar();
+    assert.equal(estado.chave, null, 'a remoção já foi gravada apesar da falha na consulta seguinte');
+    await page.getByRole('button', { name: 'Hoje', exact: true }).click();
     await page.getByText('Guarde uma chave para listar e testar os modelos disponíveis.', { exact: true }).waitFor();
+    await page.waitForFunction(() => document.querySelector('#f-cerebro fieldset')?.disabled === false);
+    assert.match(await page.locator('#ia-estado').innerText(), /Nenhuma chave central cadastrada/);
     assert.equal(estado.chave, null); assert.equal(await page.locator('#ia-testar').isDisabled(), true);
+    console.log('ok · falha após guardar/remover bloqueia estado anterior e recupera configuração pelo consumo ou período');
 
     estado.erroBanco = true;
     await page.reload();

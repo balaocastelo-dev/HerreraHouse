@@ -85,3 +85,23 @@ assim como **`node test/cerebro-tela.cjs`** e **`git diff --check`**. Capturas d
 Mantidos o uso exclusivo de `plataforma.definir_ia_central` para gravar a chave, o retorno apenas do sufixo
 e a leitura do consumo em `plataforma.ia_uso`. A consulta de conferência ao Supabase foi recusada pelo
 conector por falta de permissão; esta validação usa banco e Gemini simulados, sem alterar dados de produção.
+
+**Conferência e correção em 02/11/2026:** a tela `/gestor/cerebro` já estava implementada na `main`.
+Revalidados chave central, seleção e teste de modelo, consumo por imobiliária nos três períodos, total
+e gráfico dos últimos 30 dias. A API em `src/plataforma/gestor.js` continua gravando a chave exclusivamente
+por `plataforma.definir_ia_central` e retornando somente os quatro últimos caracteres.
+
+Corrigida a recuperação quando **Guardar** ou **Remover** conclui no servidor, mas a consulta seguinte falha.
+A tela agora invalida a configuração anterior e bloqueia o formulário até recuperar o estado atual.
+**Atualizar consumo** e os filtros de período recarregam também chave/modelo nesse caso.
+O teste de regressão reproduziu o problema antes da correção e passou depois, cobrindo troca e remoção,
+campo de chave vazio e controles bloqueados durante a falha.
+
+Validação: **`npm test` passou nas 20 suítes**, **`node test/cerebro-tela.cjs` passou no Chrome** e
+**`git diff --check` passou**. Capturas de desktop e celular conferidas em `data/cerebro-qa/` (fora do Git).
+O `rg` já instalado com o VS Code foi acrescentado apenas ao `PATH` do processo para executar a suíte.
+Nenhuma dependência, migração ou alteração em `src/agentes/ia.js` e `src/plataforma/central.js`.
+Custo estimado e teto mensal continuam opcionais e não foram incluídos.
+
+Os testes usam PostgreSQL e Gemini simulados. A consulta somente de existência das tabelas/função no
+Supabase foi recusada pelo conector por falta de permissão; a integração de produção não foi validada.

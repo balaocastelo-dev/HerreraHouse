@@ -141,6 +141,8 @@ async function telaCerebro() {
   }
   async function carregarUso(inicial = false) {
     const vez = ++carregamento;
+    // Após guardar ou remover, o estado anterior não serve mais: uma falha precisa permitir recarregar a configuração.
+    if (inicial) configuracaoCarregada = false;
     const alvo = $('#ia-consumo', raiz); alvo.setAttribute('aria-busy', 'true');
     alvo.innerHTML = '<div class="vazio">Carregando o consumo…</div>';
     try {
