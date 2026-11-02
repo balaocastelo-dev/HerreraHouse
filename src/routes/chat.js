@@ -39,7 +39,7 @@ r.post('/chat/conversas', (req, res) => {
       const id = numero(v);
       if (!one(`SELECT 1 FROM usuarios WHERE id=? ${A.veTudo(req.usuario) ? '' : 'AND ativo=1'}`, id)) falha(400, 'Usuário indisponível nesta imobiliária.');
       if (id !== uid) com.set('u' + id, { usuario_id: id, agente: null });
-    } else if (typeof v === 'string' && B.POR_SLUG[v]) com.set('a' + v, { usuario_id: null, agente: v });
+    } else if (typeof v === 'string' && Object.hasOwn(B.POR_SLUG, v)) com.set('a' + v, { usuario_id: null, agente: v });
     else falha(400, 'Contato inválido.');
   }
   if (!com.size || (b.tipo === 'direta' && com.size !== 1)) falha(400, 'Uma conversa direta precisa de outro contato.');

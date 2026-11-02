@@ -193,6 +193,15 @@ const fecha = async (servidor) => {
       { tipo: 'direta', com: [b.id, 'casas'] }, { tipo: 'sala', com: [b.id] }, { tipo: 'direta', com: ['robo-inexistente'] }]) {
       await ana('POST', '/api/chat/conversas', corpo, 400);
     }
+    // Propriedades herdadas do objeto de catálogo não são contatos de robôs.
+    const conversasAntes = one('SELECT count(*) n FROM chat_conversas').n;
+    const participantesAntes = one('SELECT count(*) n FROM chat_participantes').n;
+    for (const agente of ['__proto__', 'constructor', 'toString']) {
+      await ana('POST', '/api/chat/conversas', { tipo: 'direta', com: [agente] }, 400);
+      await ana('POST', '/api/chat/conversas', { tipo: 'sala', titulo: 'Contato inválido', com: [b.id, 'casas', agente] }, 400);
+    }
+    assert.equal(one('SELECT count(*) n FROM chat_conversas').n, conversasAntes, 'contato inválido não cria conversa');
+    assert.equal(one('SELECT count(*) n FROM chat_participantes').n, participantesAntes, 'sala inválida não grava participantes parciais');
     for (const texto of ['', '   ', 'x'.repeat(4001), 'tarefa: oi']) await ana('POST', `/api/chat/conversas/${direta.id}/mensagens`, { texto }, 400);
     await ana('GET', `/api/chat/conversas/${direta.id}?desde=1&antes=2`, undefined, 400);
     await ana('GET', '/api/chat/novidades?desde=-1', undefined, 400);

@@ -81,7 +81,9 @@ Exemplos de corpos para criar conversas:
 { "tipo": "sala", "titulo": "Reunião de vendas", "com": [12, 15, "apartamentos", "casas"] }
 ```
 
-`com` aceita até 100 entradas, com IDs numéricos ou strings numéricas e slugs de robôs. Duplicatas e
+`com` aceita até 100 entradas, com IDs numéricos ou strings numéricas e slugs de robôs do catálogo
+`B.AGENTES`. Nomes fora do catálogo, inclusive `__proto__`, `constructor` e `toString`, retornam
+`400` sem criar conversa nem participantes, mesmo numa sala com outros contatos válidos. Duplicatas e
 o próprio criador são descontados ao validar o conjunto: uma direta precisa de exatamente outro
 contato; uma sala precisa de pelo menos outro contato e título não vazio (limitado a 100 caracteres).
 Usuário comum só pode selecionar pessoas ativas. Adm/gestor também pode selecionar usuários inativos
@@ -264,7 +266,8 @@ npm test
 
 O teste inicia o servidor com SQLite temporário, cria um administrador e dois corretores, mantém
 sessões independentes e simula o Gemini em HTTP local. Cobre diretas únicas, salas, não lidas,
-paginação, validações, contatos inativos, leitura/escrita negadas a não participantes (inclusive
+paginação, validações (incluindo nomes herdados do objeto de catálogo, sem gravações parciais),
+contatos inativos, leitura/escrita negadas a não participantes (inclusive
 adm), long polling com chegada posterior, isolamento de conversas, logout e desativação do usuário
 durante a espera e resposta vazia após 25 segundos. Verifica respostas do PC e da nuvem, vários robôs na sala,
 espelhamento idempotente e exclusão de rascunhos/conversas de clientes. Também cobre a sala criada
