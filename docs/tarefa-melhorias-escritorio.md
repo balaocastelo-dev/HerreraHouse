@@ -182,9 +182,9 @@ JavaScript/WebGL ou recurso com falha. Também foram refeitas com `docs/wip/serv
 as capturas de 12h, 17h30 e 21h, conferidas visualmente. Logs, `render.json`, `lugares-2d.png` e
 `shot-{dia,tarde,noite}.{png,log}` estão atualizados em `data/cenario-qa/`, fora do Git.
 
-### Conferência e validação em 02/11/2026
+### Conferência e validação da main em `c08bf00` (02/11/2026)
 
-Os sete itens foram conferidos na ordem na `main` em `03b83e3`, confirmada também no remoto. Os commits de
+Os sete itens foram conferidos na ordem na `main` em `c08bf00`, confirmada também no remoto. Os commits de
 implementação da tabela acima já pertencem a essa versão. Os oito cliques do 2D já reutilizam o painel
 `.j3p-*` de `public/escritorio-lugares.js`; não restou pendência de implementação.
 

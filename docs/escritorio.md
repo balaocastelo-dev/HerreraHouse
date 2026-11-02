@@ -170,7 +170,7 @@ Os limites de valor mudam em "Regras do escritório".
 
 ### Verificação
 
-Última validação: `main` em `03b83e3`, confirmada também no remoto, em 02/11/2026. Os sete itens foram conferidos
+Última validação: `main` em `c08bf00`, confirmada também no remoto, em 02/11/2026. Os sete itens foram conferidos
 na ordem e já estavam implementados, inclusive os oito cliques do 2D no painel compartilhado. Não houve alteração
 no código de produção. As 20 suítes de `npm test`, os testes 2D/3D e os renders de 12h, 17h30 e 21h passaram.
 As três capturas foram conferidas visualmente; o relatório 3D registrou nove humanos por horário, sem erros
