@@ -1,8 +1,10 @@
-// Um PC virtual: o Chrome de verdade de um agente, com perfil próprio (logins, cookies e abas ficam guardados).
-// Fica fora da tela do computador, sempre ligado; quem olha pelo escritório vê a tela ao vivo e pode usar mouse e teclado.
+// Um PC virtual: o Chromium de um agente DENTRO de um container Docker (perfil proprio em disco).
+// Quem olha pelo escritorio ve a tela ao vivo (CDP) e pode usar mouse e teclado.
+// Nao abre mais Chrome na barra do Windows — se o Docker estiver fora, falha com erro claro.
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('playwright-core');
+const { garantirNavegadorDocker, pararNavegadorDocker } = require('./docker-navegador');
 
 const LARG = 1366, ALT = 820;
 const espera = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -20,6 +22,7 @@ class PcAgente {
     this.vendo = new Set(); this.minis = new Set();
     this.cursor = { x: LARG / 2, y: ALT / 2 }; this.humanoEm = 0;
     this.tarefa = null; this.wa = null; this.ligando = null; this.parado = false; this.transmitindo = false;
+    this.browser = null; this.docker = null;
   }
   get chave() { return `${this.imob.id}/${this.slug}`; }
   get ligado() { return !!(this.ctx && this.ativa && !this.ativa.isClosed()); }
@@ -30,32 +33,47 @@ class PcAgente {
     this.parado = false;
     this.ligando = (async () => {
       fs.mkdirSync(this.dir, { recursive: true });
-      // Chrome "de verdade" (não o de testes), com a janela fora da tela e sem economizar desenho de janela escondida.
-      this.ctx = await chromium.launchPersistentContext(this.dir, {
-        executablePath: this.o.chrome, headless: !!this.o.headless, viewport: { width: LARG, height: ALT }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo',
-        ignoreDefaultArgs: ['--enable-automation'], acceptDownloads: true, chromiumSandbox: !this.o.semSandbox,
-        args: ['--window-position=-3400,-3400', `--window-size=${LARG + 16},${ALT + 140}`, '--disable-blink-features=AutomationControlled',
-          '--disable-backgrounding-occluded-windows', '--disable-renderer-backgrounding', '--disable-background-timer-throttling',
-          '--disable-features=CalculateNativeWinOcclusion,Translate', '--no-first-run', '--no-default-browser-check', '--hide-crash-restore-bubble'],
+      // Navegador so no Docker (imagem linuxserver/chromium). Sem fallback para Chrome do Windows.
+      this.docker = await garantirNavegadorDocker({
+        imobId: this.imob.id,
+        slug: this.slug,
+        perfilDir: this.dir,
+        titulo: this.chave,
+      });
+      this.browser = await chromium.connectOverCDP(this.docker.cdpUrl);
+      this.browser.on('disconnected', () => this.caiu());
+      this.ctx = this.browser.contexts()[0] || await this.browser.newContext({
+        viewport: { width: LARG, height: ALT }, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo', acceptDownloads: true,
       });
       this.ctx.on('close', () => this.caiu());
       this.ctx.on('page', (p) => this.novaPagina(p, !this.calado));
       let p = this.ctx.pages()[0];
       if (!p) p = await this.ctx.newPage();
       for (const q of this.ctx.pages()) this.novaPagina(q, false);
-      if (p.url() === 'about:blank') await p.goto(this.o.inicio || 'https://www.google.com/', { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {});
+      try { await p.setViewportSize({ width: LARG, height: ALT }); } catch {}
+      const u0 = p.url();
+      if (!u0 || u0 === 'about:blank' || /^chrome:/i.test(u0)) {
+        await p.goto(this.o.inicio || 'https://www.google.com/', { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {});
+      }
       await this.ativar(p);
-      log(this.chave, 'ligado');
+      log(this.chave, 'ligado via Docker', this.docker.cdpUrl, 'tela', this.docker.telaUrl);
     })().finally(() => { this.ligando = null; });
     return this.ligando;
   }
   // aba aberta pelo próprio sistema (WhatsApp, tarefa): não rouba a tela de quem está olhando
   async novaAba() { this.calado = true; try { return await this.ctx.newPage(); } finally { this.calado = false; } }
-  async desliga() { this.parado = true; try { await this.ctx && this.ctx.close(); } catch {} this.ctx = null; this.ativa = null; }
+  async desliga() {
+    this.parado = true;
+    try { if (this.browser) await this.browser.close(); } catch {}
+    try { if (this.ctx) await this.ctx.close(); } catch {}
+    this.browser = null; this.ctx = null; this.ativa = null; this.cdp = null; this.transmitindo = false;
+    try { await pararNavegadorDocker({ imobId: this.imob.id, slug: this.slug }); } catch (e) { log(this.chave, 'parar docker:', e.message); }
+    this.docker = null;
+  }
   caiu() {
     this.ctx = null; this.ativa = null; this.cdp = null; this.transmitindo = false;
     if (this.parado) return;
-    log(this.chave, 'o Chrome fechou; religando em 4 s');
+    log(this.chave, 'o Chromium do Docker desconectou; religando em 4 s');
     setTimeout(() => this.liga().catch((e) => log(this.chave, 'não religou:', e.message)), 4000);
   }
   novaPagina(p, ativar) {
