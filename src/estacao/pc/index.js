@@ -3,7 +3,7 @@
 //   { "porta": 3434, "pasta": "C:/HerreraAgentes", "chrome": "C:/Program Files/Google/Chrome/Application/chrome.exe",
 //     "cloudflared": "C:/HerreraAgentes/cloudflared.exe",
 //     "imobiliarias": [ { "id": "casaprado-ab12cd", "base": "https://casaprado.corretordofuturo.app", "chave": "est_..." } ] }
-// A chave de cada imobiliária sai em Escritório virtual > Configuração geral > PCs virtuais > "Gerar chave da estação".
+// Nao abre Chrome na barra do Windows; se o Docker estiver fora, a Estacao falha com erro claro. A chave de cada imobiliária sai em Escritório virtual > Configuração geral > PCs virtuais > "Gerar chave da estação".
 // Uso: node src/estacao/pc/index.js   (a tarefa do Windows "\HerreraHouse\Estacao dos agentes" liga sozinha e religa se cair)
 const fs = require('fs');
 const os = require('os');

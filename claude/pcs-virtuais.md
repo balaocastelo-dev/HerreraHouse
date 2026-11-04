@@ -82,3 +82,8 @@
 - Código: src/estacao/servidor.js, src/estacao/ia-visao.js, src/estacao/pc/{index,pc,tarefa,whatsapp}.js,
   public/estacao-pc.js, scripts/estacao-manter.ps1, scripts/estacao-central.js. Teste: node test/estacao.js
   (no npm test), com liga/desliga pelo painel.
+
+
+## Navegador no Docker (2026-11)
+
+Cada PC de agente sobe um container lscr.io/linuxserver/chromium com o perfil montado em C:/HerreraAgentes/<imob>/<agente>, CDP em 127.0.0.1:9401+ e tela Selkies em 127.0.0.1:7601+. A Estacao conecta com Playwright connectOverCDP. Nao ha fallback para Chrome do Windows: se o Docker estiver fora, a Estacao falha com erro claro.
